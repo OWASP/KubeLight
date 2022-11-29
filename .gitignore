@@ -1,0 +1,7 @@
+*.pyc
+*.idea/
+db.json
+venv/
+.DS_Store
+data/
+output/

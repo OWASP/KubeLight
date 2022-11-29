@@ -1,0 +1,2 @@
+kubernetes~=25.3.0
+tinydb~=4.7.0
