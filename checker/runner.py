@@ -1,18 +1,19 @@
-from checker.rules import Rule
 from core.db import KubeDB
 from core.k8s import Kube
-from core.settings import RESOURCES, CHECKER_POOL_SIZE
+from core.settings import RESOURCES, TABLE_RESOURCES, CHECKER_POOL_SIZE
+from checker.packs import *
 
 from multiprocessing.dummy import Pool
 
 
-
-
-
 class Checker:
+    """
+    Checker check the Rules against the K8s configurations stored in KubeDB.
+    """
 
-    def __init__(self, namespace=""):
+    def __init__(self, namespace=None):
         self.namespace = namespace
+        self.db = KubeDB(namespace) if namespace else None
         self.kube = Kube()
 
     def populate_resources(self):
@@ -21,7 +22,7 @@ class Checker:
             if resource == "Pod":
                 self.populate_container_with_pod(data)
             else:
-                KubeDB(self.namespace, resource).populate(data)
+                self.db.populate(resource, data)
 
     def populate_container_with_pod(self, pods):
         containers = []
@@ -35,23 +36,19 @@ class Checker:
                 item["pod"] = index
                 initContainers.append(item)
             pod["spec"].get("initContainers", [])
-
-        KubeDB(self.namespace, "Container").populate(containers)
-        KubeDB(self.namespace, "initContainer").populate(initContainers)
-        KubeDB(self.namespace, "Pod").populate(pods)
+        self.db.populate("Container", containers)
+        self.db.populate("initContainer", initContainers)
+        self.db.populate("Pod", pods)
 
     def clean(self):
-        for resource in RESOURCES + ["Container", "initContainer"]:
-            KubeDB(self.namespace, resource).truncate()
+        self.db.truncate()
 
     def scan(self):
         rules = Rule.__subclasses__()
-        # [Class K001, Class K002, .. .. ]
         for cls in rules:
-            rule = cls()
-            # execute_rule_namespace is parent's method
-            # output_query defined for every rule
-            rule.execute_rule_namespace(self.namespace)
+            rule = cls(self.db)
+            rule.scan()
+            print(rule, rule.output)
 
     @staticmethod
     def initiate_scan(namespace):
@@ -60,12 +57,8 @@ class Checker:
         checker.scan()
         checker.clean()
 
-    def start(self):
+    def run(self):
         pool = Pool(CHECKER_POOL_SIZE)
         pool.map(Checker.initiate_scan, self.kube.namespace_names())
         pool.close()
         pool.join()
-
-    def run(self):
-        self.start()
-        self.clean()

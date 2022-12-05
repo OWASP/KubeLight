@@ -5,3 +5,4 @@ venv/
 .DS_Store
 data/
 output/
+testdb.json

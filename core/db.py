@@ -1,45 +1,28 @@
-import yaml
+from core.settings import INSERT_CHUNK_SIZE, TABLE_RESOURCES
 
-from core.settings import INSERT_CHUNK_SIZE
-
-from tinydb import TinyDB, Storage, JSONStorage
-
-
-class YAMLStorage(Storage):
-    def __init__(self, filename):
-        self.filename = filename
-
-    def read(self):
-        with open(self.filename) as handle:
-            try:
-                data = yaml.safe_load(handle.read())
-                return data
-            except yaml.YAMLError:
-                return None
-
-    def write(self, data):
-        with open(self.filename, 'w+') as handle:
-            yaml.dump(data, handle)
-
-    def close(self):
-        pass
+from tinydb import TinyDB
+from tinydb.storages import MemoryStorage
 
 
 class KubeDB:
-    def __init__(self, db_name, table_name, format="json"):
-        if format == "yaml":
-            self.db = TinyDB("data/" + db_name + '.yaml')
-        else:
-            self.db = TinyDB("data/" + db_name + '.json', Storage=YAMLStorage)
-        self.table = self.db.table(table_name)
+    def __init__(self, db_name):
+        self.name = db_name
+        self.database = TinyDB(storage=MemoryStorage)
+        self.initiate_kube_tables()
+
+    def initiate_kube_tables(self):
+        for resource in TABLE_RESOURCES:
+            setattr(self, resource, self.database.table(resource))
 
     def truncate(self):
-        self.table.truncate()
+        for resource in TABLE_RESOURCES:
+            self.database.table(resource).truncate()
+        self.database = None
 
-    def search(self, condition):
-        return self.table.search(condition) if condition else self.table.all()
+    def search(self, table_name, condition):
+        return self.database.table(table_name).search(condition) if condition else self.database.table(table_name).all()
 
-    def populate(self, data):
+    def populate(self, table_name, data):
         data_chunked = [data[i:i + INSERT_CHUNK_SIZE] for i in range(0, len(data), INSERT_CHUNK_SIZE)]
         for items in data_chunked:
-            self.table.insert_multiple(items)
+            self.database.table(table_name).insert_multiple(items)

@@ -50,29 +50,7 @@ def scan(data_dict):
     return outcome
 
 
-class Rule:
-    def __init__(self):
-        self.data = None
-        self.output = None
-        self.common_wl = ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Job"]
 
-    def process_output(self):
-        pass
-
-    def start_scan(self):
-        print("Starting Scan")
-        self.data = scan(self.data_query) if hasattr(self, "data_query") else {}
-        self.output = scan(self.output_query)
-
-    def cdict(self, query, keys=[]):
-        return {key: query for key in keys} if keys else {key: query for key in self.common_wl}
-
-    @property
-    def stats(self):
-        return {key: len(value) for key, value in self.output.items()}
-
-    def run(self):
-        self.start_scan()
 
 
 
