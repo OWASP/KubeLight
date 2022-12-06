@@ -1,6 +1,7 @@
 from core.db import KubeDB
 from core.k8s import Kube
-from core.settings import RESOURCES, TABLE_RESOURCES, CHECKER_POOL_SIZE
+from core.utils import container_path
+from core.settings import RESOURCES, WL_CONTAINER_PATH, CHECKER_POOL_SIZE
 from checker.packs import *
 
 from multiprocessing.dummy import Pool
@@ -19,26 +20,35 @@ class Checker:
     def populate_resources(self):
         for resource in RESOURCES:
             data = self.kube.resources_in_namespace(self.namespace, resource)
-            if resource == "Pod":
-                self.populate_container_with_pod(data)
+            if resource in WL_CONTAINER_PATH.keys():
+                self.populate_container_with_resource(resource, data, self.db)
             else:
                 self.db.populate(resource, data)
 
-    def populate_container_with_pod(self, pods):
+    @staticmethod
+    def populate_container_with_resource(resource, data, db):
+        """
+        :param resource: It is kind - Pod, Deployment, etc
+        :param data:  list of json data received
+        :param db: the kubedb instance
+        :return:
+        """
         containers = []
         initContainers = []
-        for index, pod in enumerate(pods):
-            pod["id"] = index
-            for item in pod["spec"].get("containers", []):
-                item["pod"] = index
+        for index, res in enumerate(data):
+            res["id"] = resource + str(index)
+            cpath = container_path(res, WL_CONTAINER_PATH[resource] + ["containers"])
+            icpath = container_path(res, WL_CONTAINER_PATH[resource] + ["initContainers"])
+
+            for item in cpath:
+                item["parent"] = resource + str(index)
                 containers.append(item)
-            for item in pod["spec"].get("initContainers", []):
-                item["pod"] = index
+            for item in icpath:
+                item["parent"] = resource + str(index)
                 initContainers.append(item)
-            pod["spec"].get("initContainers", [])
-        self.db.populate("Container", containers)
-        self.db.populate("initContainer", initContainers)
-        self.db.populate("Pod", pods)
+        db.populate("Container", containers)
+        db.populate("initContainer", initContainers)
+        db.populate(resource, data)
 
     def clean(self):
         self.db.truncate()
@@ -57,8 +67,9 @@ class Checker:
         checker.scan()
         checker.clean()
 
-    def run(self):
+    @staticmethod
+    def run():
         pool = Pool(CHECKER_POOL_SIZE)
-        pool.map(Checker.initiate_scan, self.kube.namespace_names())
+        pool.map(Checker.initiate_scan, Kube().namespace_names())
         pool.close()
         pool.join()

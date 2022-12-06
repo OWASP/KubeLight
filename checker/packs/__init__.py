@@ -1,1 +1,1 @@
-from checker.packs.light import *
+from checker.packs.security import *

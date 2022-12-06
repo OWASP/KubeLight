@@ -12,3 +12,10 @@ class K001(Rule):
             query = ~(Spec.automountServiceAccountToken.exists()) & Spec.serviceAccountName.one_of(serviceAccounts) \
                     | (Spec.automountServiceAccountToken == True)
             self.output[workload] = getattr(self.db, workload).search(query)
+
+
+class K002(Rule):
+    def scan(self):
+        for workload, Spec in SPEC_DICT.items():
+            self.output[workload] = getattr(self.db, workload).search(Spec.hostIPC == True)
+

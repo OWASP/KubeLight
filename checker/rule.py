@@ -1,6 +1,3 @@
-from core.settings import SIMILAR_WORKLOADS
-
-
 class Rule:
     """
     Parent class for Rules to execute the query.
