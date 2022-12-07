@@ -4,7 +4,6 @@ import yaml
 import __main__
 
 from core.db import KubeDB
-from core.settings import WL_CONTAINER_PATH
 from checker.packs import *
 from checker.runner import Checker
 
@@ -30,12 +29,10 @@ class CheckerTester:
                 db = KubeDB(rulename)
                 data = yaml.safe_load_all(open(filename).read())
                 for res in data:
-                    if res["kind"] in WL_CONTAINER_PATH.keys():
-                        Checker.populate_container_with_resource(res["kind"], [res], db)
-                    else:
-                        db.populate(res["kind"], [res])
+                    db.populate(res["kind"], [res])
                 rule = getattr(__main__, rulename)(db)
                 rule.scan()
+                print(rulename,rule.output)
                 db.truncate()
                 if CheckerTester.input_status(filename) == "PASS" and CheckerTester.is_output_empty(rule.output):
                     print("Test output as expected", filename)

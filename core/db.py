@@ -1,4 +1,4 @@
-from core.settings import INSERT_CHUNK_SIZE, TABLE_RESOURCES
+from core.settings import INSERT_CHUNK_SIZE, RESOURCES
 
 from tinydb import TinyDB
 from tinydb.storages import MemoryStorage
@@ -11,12 +11,13 @@ class KubeDB:
         self.initiate_kube_tables()
 
     def initiate_kube_tables(self):
-        for resource in TABLE_RESOURCES:
+        for resource in RESOURCES:
             setattr(self, resource, self.database.table(resource))
 
     def truncate(self):
-        for resource in TABLE_RESOURCES:
+        for resource in RESOURCES:
             self.database.table(resource).truncate()
+        self.database.truncate()
         self.database = None
 
     def search(self, table_name, condition):

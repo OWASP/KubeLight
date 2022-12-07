@@ -30,3 +30,4 @@ K003 = dict(title="HostPID is enabled",
             yaml_example="",
             tags=["security", "nsa"]
             )
+

@@ -17,13 +17,6 @@ for item in SIMILAR_WORKLOADS:
     SPEC_DICT[item] = WorkLoadSpec
     SPEC_TEMPLATE_DICT[item] = WorkLoadTemplateSpec
 
-WL_CONTAINER_PATH = {
-    "Pod": ["spec"],
-    "CronJob": "spec.jobTemplate.spec.template.spec".split("."),
-}
-for item in SIMILAR_WORKLOADS:
-    WL_CONTAINER_PATH[item] = "spec.template.spec".split(".")
-
 
 # Static
 INSERT_CHUNK_SIZE = 1000
@@ -38,6 +31,4 @@ NAMESPACE_SCOPED_RESOURCES = ['ConfigMap', 'CronJob', 'DaemonSet',
                               'ServiceAccount', 'Service', 'StatefulSet', 'Ingress']
 
 RESOURCES = CLUSTER_SCOPED_RESOURCES + NAMESPACE_SCOPED_RESOURCES
-
-TABLE_RESOURCES = RESOURCES + ["initContainer", "Container"]
 
