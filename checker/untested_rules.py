@@ -1,3 +1,59 @@
+import functools
+import json
+import operator
+import subprocess
+import re
+
+from tinydb import TinyDB, Query
+
+db = TinyDB('db.json')
+q = Query()
+
+Spec = q.spec
+CronJobSpec = q.spec.jobTemplate.spec.template.spec
+WorkLoadSpec = q.spec.template.spec
+
+RESOURCES = ['ClusterRole', 'ClusterRoleBinding', 'ConfigMap', 'CronJob', 'DaemonSet',
+             'Deployment', 'Endpoint', 'HorizontalPodAutoscaler', 'Ingress', 'Job',
+             'LimitRange', 'NetworkPolicy', 'PodDisruptionBudget', 'Pod', 'PodSecurityPolicy',
+             'ReplicaSet', 'ReplicationController', 'ResourceQuota', 'Role', 'RoleBinding',
+             'ServiceAccount', 'Service', 'StatefulSet']
+
+
+def populate_db(resources=RESOURCES):
+    for resource in resources:
+        try:
+            output = subprocess.run(["kubectl", "get", resource, "--all-namespaces", "-ojson"], stdout=subprocess.PIPE)
+            output = json.loads(output.stdout)
+            table = db.table(resource)
+            table.insert_multiple(output["items"])
+        except Exception as e:
+            print(str(e))
+
+
+def truncate_db(resources=RESOURCES):
+    for resource in resources:
+        table = db.table(resource)
+        table.truncate()
+
+
+truncate_db()
+populate_db()
+
+
+def scan(data_dict):
+    outcome = {}
+    for key, value in data_dict.items():
+        table = db.table(key)
+        data = table.search(value) if value else table.all()
+        outcome[key] = data
+    return outcome
+
+
+
+
+
+
 
 class K003(Rule):
     # clusterrolebindingClusterAdmin.yaml
@@ -111,6 +167,12 @@ class K008(Rule):
         return dict(Pod=Pod, CronJob=CronJob, **self.cdict(WorkLoad))
 
 
+class K009(Rule):
+    # hostIPC
+    @property
+    def output_query(self):
+        WorkLoad = (WorkLoadSpec.hostIPC == True)
+        return dict(Pod=(Spec.hostIPC == True), CronJob=(CronJobSpec.hostIPC == True), **self.cdict(WorkLoad))
 
 
 class K0010(Rule):
