@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  labels:
+    app: zookeeper
+spec:
+  template:
+    spec:
+      containers:
+      - name: zookeeper
+        image: zookeeper
