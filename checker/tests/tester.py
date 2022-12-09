@@ -32,12 +32,11 @@ class CheckerTester:
                     db.populate(res["kind"], [res])
                 rule = getattr(__main__, rulename)(db)
                 rule.scan()
-                print(rulename,rule.output)
                 db.truncate()
                 if CheckerTester.input_status(filename) == "PASS" and CheckerTester.is_output_empty(rule.output):
-                    print("Test output as expected", filename)
+                    print("Test Passed as expected", filename)
                 elif CheckerTester.input_status(filename) == "FAIL" and not CheckerTester.is_output_empty(rule.output):
-                    print("Test output as expected", filename, rule.output)
+                    print("Test Failed as expected", filename, rule.output)
                 else:
                     self.failed_data.append([filename, rule.output])
 

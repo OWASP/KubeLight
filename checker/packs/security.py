@@ -3,6 +3,7 @@ from checker.rule import Rule
 
 
 class K001(Rule):
+    # automountToken
     def scan(self):
         sa = self.db.ServiceAccount.search(~(q.automountServiceAccountToken.exists()) |
                                            (q.automountServiceAccountToken == True))
@@ -15,12 +16,14 @@ class K001(Rule):
 
 
 class K002(Rule):
+    # hostIPC
     def scan(self):
         for workload, Spec in SPEC_DICT.items():
             self.output[workload] = getattr(self.db, workload).search(Spec.hostIPC == True)
 
 
 class K003(Rule):
+    # hostIPC
     def scan(self):
         for workload, Spec in SPEC_DICT.items():
             self.output[workload] = getattr(self.db, workload).search(Spec.hostPID == True)
@@ -28,7 +31,9 @@ class K003(Rule):
 
 class K004(Rule):
     def scan(self):
-        pass
+        for workload, Spec in SPEC_DICT.items():
+            self.output[workload] = getattr(self.db, workload).search(Spec.hostNetwork == True)
+
 
 
 class K005(Rule):
