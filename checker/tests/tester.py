@@ -51,7 +51,7 @@ if __name__ == "__main__":
             testcases_files[item] = file_paths
     ct = CheckerTester(testcases_files)
     ct.run()
-    print("\n#### Test Summary ####\n")
+    print("\n#### Testcases having issues ####\n")
     for item in ct.failed_data:
         print(item[0], item[1])
     if len(ct.failed_data) > 0:

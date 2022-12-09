@@ -23,7 +23,7 @@ class K002(Rule):
 
 
 class K003(Rule):
-    # hostIPC
+    # hostPID
     def scan(self):
         for workload, Spec in SPEC_DICT.items():
             self.output[workload] = getattr(self.db, workload).search(Spec.hostPID == True)
@@ -35,7 +35,8 @@ class K004(Rule):
             self.output[workload] = getattr(self.db, workload).search(Spec.hostNetwork == True)
 
 
-
 class K005(Rule):
+    # hostPortSet
     def scan(self):
-        pass
+        for workload, Spec in SPEC_DICT.items():
+            self.output[workload] = getattr(self.db, workload).search(Spec.hostPort == True)
