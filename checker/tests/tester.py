@@ -38,6 +38,7 @@ class CheckerTester:
                 elif CheckerTester.input_status(filename) == "FAIL" and not CheckerTester.is_output_empty(rule.output):
                     print("Test Failed as expected", filename, rule.output)
                 else:
+                    print("Test check required NOT expected", filename, rule.output)
                     self.failed_data.append([filename, rule.output])
 
 
