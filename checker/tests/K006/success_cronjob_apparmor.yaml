@@ -1,0 +1,75 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: my-cron-job
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/my-cron-job-container: my-cron-job-container
+        spec:
+          containers:
+          - name: my-cron-job-container
+            image: my-cron-job-image
+          restartPolicy: OnFailure
+
+---
+
+# This succeeds because SOME capability is dropped, and ALL capabilities are not added.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod11
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    securityContext:
+      capabilities:
+        drop:
+        - ALL
+        add:
+        - someCapabilities
+    ports:
+    - containerPort: 80
+
+---
+# This succeeds because a seccomp profile is defined for the pod and not undefined for the container.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod13
+spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+
+---
+
+# This succeeds because the container seccomp profile  overrides the pod Unconfined setting.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod14
+spec:
+  securityContext:
+    seccompProfile:
+      type: Unconfined
+  containers:
+  - name: nginx
+    securityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    image: nginx
+    ports:
+    - containerPort: 80
+

@@ -1,4 +1,4 @@
-from core.settings import q, SPEC_DICT
+from core.settings import q
 from checker.rule import Rule
 
 
@@ -14,7 +14,7 @@ class K0013(Rule):
                                                                   lambda x: x and int(x) < self.min_replica))
 
 
-class K0033(Rule):
+class K0014(Rule):
     # missingPodDisruptionBudget
     def scan(self):
         pdbs = self.db.PodDisruptionBudget.search(q.spec.selector.matchLabels.exists())

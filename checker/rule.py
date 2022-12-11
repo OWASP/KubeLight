@@ -9,3 +9,4 @@ class Rule:
     def __init__(self, db):
         self.db = db
         self.output = {}
+        self.container_output = {}

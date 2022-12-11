@@ -1,7 +1,8 @@
 from checker.rule import Rule
 from checker.utils import cluster_role_binding_name_check, role_binding_name_check, \
-    cluster_role_default_and_admin_name_check
+    cluster_role_admin_name_check
 from core.settings import q
+
 
 class K0019(Rule):
     # rolebindingClusterAdminClusterRole
@@ -13,7 +14,7 @@ class K0019(Rule):
     def scan(self):
         clusterroles = self.db.ClusterRole.search(q.metadata.name.one_of(self.cluster_admin_names) | (q.rules.any(
             (q.apiGroups.any(["*"])) & (
-                        (q.verbs.any(["*"])) | q.verbs.test(lambda qverbs: set(qverbs) == self.verbs)) & (
+                    (q.verbs.any(["*"])) | q.verbs.test(lambda qverbs: set(qverbs) == self.verbs)) & (
                 q.resources.any(["*"])))))
         self.output["RoleBinding"] = self.db.RoleBinding.search(
             ~q.metadata.name.test(cluster_role_binding_name_check) & q.roleRef.name.one_of(
@@ -60,7 +61,7 @@ class K0022(Rule):
     # clusterrolePodExecAttach
     def scan(self):
         self.output["ClusterRole"] = self.db.ClusterRole.search(
-            ~q.metadata.name.test(cluster_role_default_and_admin_name_check) & q.rules.any((q.resources.test(
+            ~q.metadata.name.test(cluster_role_admin_name_check) & q.rules.any((q.resources.test(
                 lambda res: bool({item.lower() for item in res} & {"*", "pods/exec", "pods/attach"}))) & (q.verbs.test(
                 lambda ver: bool({item.lower() for item in ver} & {"*", "get", "create"}))) & (
                                                                                                q.apiGroups.any(

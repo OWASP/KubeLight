@@ -26,20 +26,23 @@ class CheckerTester:
     def run(self):
         for rulename in self.testcases_files:
             for filename in self.testcases_files[rulename]:
-                db = KubeDB(rulename)
-                data = yaml.safe_load_all(open(filename).read())
-                for res in data:
-                    db.populate(res["kind"], [res])
-                rule = getattr(__main__, rulename)(db)
-                rule.scan()
-                db.truncate()
-                if CheckerTester.input_status(filename) == "PASS" and CheckerTester.is_output_empty(rule.output):
-                    print("Test Passed as expected", filename)
-                elif CheckerTester.input_status(filename) == "FAIL" and not CheckerTester.is_output_empty(rule.output):
-                    print("Test Failed as expected", filename, rule.output)
-                else:
-                    print("Test check required NOT expected", filename, rule.output)
-                    self.failed_data.append([filename, rule.output])
+                if filename in filename:
+                    db = KubeDB(rulename)
+                    data = yaml.safe_load_all(open(filename).read())
+                    for res in data:
+                        db.populate(res["kind"], [res])
+                    rule = getattr(__main__, rulename)(db)
+                    rule.scan()
+                    db.truncate()
+                    if CheckerTester.input_status(filename) == "PASS" and CheckerTester.is_output_empty(rule.output):
+                        print("Test Passed as expected", filename)
+                        #pass
+                    elif CheckerTester.input_status(filename) == "FAIL" and not CheckerTester.is_output_empty(rule.output):
+                        print("Test Failed as expected", filename, rule.output)
+                        #pass
+                    else:
+                        print("Test check output NOT expected", filename, rule.output)
+                        self.failed_data.append([filename, rule.output])
 
 
 if __name__ == "__main__":
