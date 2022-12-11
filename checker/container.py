@@ -110,18 +110,7 @@ class Workload(Resource):
         else:
             return False
 
-    def dangerous_cap(self, containers):
-        dangerous_cap = ["ALL", "SYS_ADMIN", "NET_ADMIN"]
-        dangerous_containers = []
-        for container in containers:
-            container = Container(container)
-            add_cap = container.add_capabilities()
-            if bool(set(add_cap) & set(dangerous_cap)):
-                container.log.append(
-                    "Container %s: ALL, SYS_ADMIN or NET_ADMIN in add Linux Capabilities" % container.name)
-                dangerous_containers.append({"container": container.container, "log": container.log})
-        self.output[self.name] = dangerous_containers
-        if len(dangerous_containers):
-            return True
-        else:
-            return False
+    def only_output(self, containers, message="Container %s has issue"):
+        self.output[self.name] = [{"container": Container(c).container, "log": [message % Container(c).name]} for c in
+                                  containers]
+        return True
