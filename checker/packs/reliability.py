@@ -1,5 +1,5 @@
-from core.settings import q
 from checker.rule import Rule
+from core.settings import q
 
 
 class K0013(Rule):
@@ -24,3 +24,11 @@ class K0014(Rule):
                 pdb_labels.append((k, v))
         check_label = lambda labels: bool(set([(k, v) for k, v in labels.items()]) & set(pdb_labels))
         self.output["Deployment"] = self.db.Deployment.search(~q.metadata.labels.test(check_label))
+
+
+class K0015(Rule):
+    # pdbDisruptionsIsZero
+    def scan(self):
+        self.output["PodDisruptionBudget"] = self.db.PodDisruptionBudget.search((q.spec.minAvailable == "100%") |
+                                                                                (q.spec.maxUnavailable.one_of([0, "0", "0%"])))
+        print(self.output)
