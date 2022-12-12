@@ -40,6 +40,7 @@ class K006(Rule):
 class K007(Rule):
     # insecureCapabilities
     def scan(self):
+        message = "Container {c.name} has insecure capabilities"
         check_cap = lambda drop: (set(map(str.upper, drop)) == set(INSECURE_CAP)) or \
                                  "ALL" in list(map(str.upper, drop))
         container_cond = ~(q.securityContext.capabilities.drop.test(check_cap))
@@ -47,7 +48,7 @@ class K007(Rule):
             wc = Workload()
             self.output[workload] = getattr(self.db, workload).search(
                 (q.metadata.name.test(wc.name)) & (Spec.containers.any(container_cond)) & Spec.containers.test(
-                    wc.only_output))
+                    wc.only_output, message))
             self.container_output[workload] = wc.output
 
 
