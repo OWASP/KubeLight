@@ -67,8 +67,3 @@ class K0017(Rule):
             self.output[workload] = getattr(self.db, workload).search(~Spec.priorityClassName.exists())
 
 
-class K0018(Rule):
-    def scan(self):
-        self.message = "CPU Request is missing for container {c.name} and image {c.image}"
-        self.query = ~q.resources.requests.cpu.exists()
-        self.scan_workload_any_container()

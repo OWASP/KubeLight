@@ -1,7 +1,7 @@
 import re
 
 from checker.rule import Rule
-from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT, INSECURE_CAP, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
+from checker.settings import q, SPEC_DICT, INSECURE_CAP, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
     DANGEROUS_CAP
 from checker.workload import Workload
 
@@ -10,46 +10,30 @@ class K005(Rule):
     # dangerousCapabilities
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.message = "Container %s has added dangerous capabilities " + ",".join(DANGEROUS_CAP)
 
     def scan(self):
+        self.message = "Container %s has added dangerous capabilities " + ",".join(DANGEROUS_CAP)
         check_cap = lambda add: bool(set(map(str.upper, add)) & set(DANGEROUS_CAP))
-        container_cond = (q.securityContext.capabilities.add != None) & \
-                         (q.securityContext.capabilities.add.test(check_cap))
-        for workload, Spec in SPEC_DICT.items():
-            wc = Workload()
-            self.output[workload] = getattr(self.db, workload).search(
-                (q.metadata.name.test(wc.name)) & Spec.containers.any(container_cond) & Spec.containers.test(
-                    wc.only_output, self.message))
-            self.container_output[workload] = wc.output
+        self.query = (q.securityContext.capabilities.add != None) & \
+                     (q.securityContext.capabilities.add.test(check_cap))
+        self.scan_workload_any_container()
 
 
 class K006(Rule):
     # linuxHardening
     def scan(self):
-        for workload, Spec in SPEC_DICT.items():
-            wc = Workload()
-            self.output[workload] = getattr(self.db, workload).search(
-                (q.metadata.name.test(wc.name)) & (Spec.test(wc.spec)) &
-                (SPEC_TEMPLATE_DICT[workload].metadata.test(wc.metadata)) & (
-                    Spec.containers.test(wc.linux_hardening))
-            )
-            self.container_output[workload] = wc.output
+        self.wl_func = "linux_hardening"
+        self.scan_workload_securityContext()
 
 
 class K007(Rule):
     # insecureCapabilities
     def scan(self):
-        message = "Container {c.name} has insecure capabilities"
+        self.message = "Container {c.name} has insecure capabilities"
         check_cap = lambda drop: (set(map(str.upper, drop)) == set(INSECURE_CAP)) or \
                                  "ALL" in list(map(str.upper, drop))
-        container_cond = ~(q.securityContext.capabilities.drop.test(check_cap))
-        for workload, Spec in SPEC_DICT.items():
-            wc = Workload()
-            self.output[workload] = getattr(self.db, workload).search(
-                (q.metadata.name.test(wc.name)) & (Spec.containers.any(container_cond)) & Spec.containers.test(
-                    wc.only_output, message))
-            self.container_output[workload] = wc.output
+        self.query = ~(q.securityContext.capabilities.drop.test(check_cap))
+        self.scan_workload_any_container()
 
 
 class K008(Rule):
@@ -69,3 +53,24 @@ class K008(Rule):
                     wc.insensitive_env, key_combined, val_combined))
             self.container_output[workload] = wc.output
 
+
+class K0031(Rule):
+    def scan(self):
+        self.message = "Container {c.name} has hostPort set"
+        self.query = (q.ports.exists() & q.ports.any(q.hostPort.exists()))
+        self.scan_workload_any_container()
+
+
+class K0032(Rule):
+    def scan(self):
+        self.message = "Container {c.name} is privileged"
+        self.query = (q.securityContext.privileged.exists() & (q.securityContext.privileged == True))|\
+                     (q.securityContext.capabilities.add.test(lambda add: add.upper() == "SYS_ADMIN"))
+        self.scan_workload_any_container()
+
+
+class K0033(Rule):
+    def scan(self):
+        self.message = "AllowPrivilegeEscalation is not explicitly set on Container {c.name}"
+        self.query = ~(q.securityContext.allowPrivilegeEscalation.exists() & (q.securityContext.allowPrivilegeEscalation == False))
+        self.scan_workload_any_container()

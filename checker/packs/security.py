@@ -55,3 +55,9 @@ class K009(Rule):
                                                             q.data.test(check_regex) & q.data.test(wc.insensitive_cm,
                                                                                                    key_comb, val_comb))
         self.configmap_output = wc.output
+
+
+class K0030(Rule):
+    def scan(self):
+        self.output["Ingress"] = self.db.Ingress.search(~q.spec.tls.exists())
+

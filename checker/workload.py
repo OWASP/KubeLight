@@ -60,7 +60,8 @@ class Workload:
             return False
 
     def only_output(self, containers, message):
-        self.output[self.name] = [{"container": Container(c).container, "log": [message.format(c=Container(c))]} for c in
+        self.output[self.name] = [{"container": Container(c).container, "log": [message.format(c=Container(c))]} for c
+                                  in
                                   containers]
         return True
 

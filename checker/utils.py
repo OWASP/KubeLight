@@ -2,7 +2,12 @@ from functools import reduce
 
 
 def dget(dictionary, keys, default={}):
-    return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
+    try:
+        return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
+    except Exception as e:
+        print("######", str(e),"######")
+        return default
+
 
 
 def fget(dictionary, keys, default={}):

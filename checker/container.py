@@ -53,3 +53,4 @@ class Container:
             self.log.append("Container %s: Insecure capabilities: `ALL` is Added or Nothing is Dropped" % self.name)
             return False
         return True
+
