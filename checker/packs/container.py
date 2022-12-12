@@ -3,8 +3,6 @@ import re
 from checker.rule import Rule
 from checker.settings import q, SPEC_DICT, INSECURE_CAP, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
     DANGEROUS_CAP
-from checker.workload import Workload
-
 
 class K005(Rule):
     # dangerousCapabilities
@@ -45,13 +43,9 @@ class K008(Rule):
                                          bool(re.search(val_combined, kv.get("value", ""), flags=re.IGNORECASE))) &
                                         (not bool(kv.get("valueFrom")))
                                         for kv in data])
-        condition = q.env.test(check_regex)
-        for workload, Spec in SPEC_DICT.items():
-            wc = Workload()
-            self.output[workload] = getattr(self.db, workload).search(
-                (q.metadata.name.test(wc.name)) & (Spec.containers.any(condition)) & Spec.containers.test(
-                    wc.insensitive_env, key_combined, val_combined))
-            self.container_output[workload] = wc.output
+        self.query = q.env.test(check_regex)
+        self.wl_func = "insensitive_env"
+        self.scan_workload_any_container(key_combined, val_combined)
 
 
 class K0031(Rule):

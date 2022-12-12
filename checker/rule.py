@@ -14,12 +14,13 @@ class Rule:
         self.query = q
         self.wl_func = "only_output"
 
-    def scan_workload_any_container(self):
+    def scan_workload_any_container(self,*args):
+        args = (self.message,) if not args else args
         for workload, Spec in SPEC_DICT.items():
             wc = Workload()
             self.output[workload] = getattr(self.db, workload).search(
                 (q.metadata.name.test(wc.name)) & (Spec.containers.any(self.query)) & Spec.containers.test(
-                    getattr(wc, self.wl_func),self.message))
+                    getattr(wc, self.wl_func),*args))
             self.container_output[workload] = wc.output
         print(self.container_output)
 
