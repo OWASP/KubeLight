@@ -1,17 +1,19 @@
-from checker.container import Workload
+import re
+
 from checker.rule import Rule
-from core.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT
+from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT, INSECURE_CAP, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
+    DANGEROUS_CAP
+from checker.workload import Workload
 
 
 class K005(Rule):
     # dangerousCapabilities
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.dangerous_cap = ["ALL", "SYS_ADMIN", "NET_ADMIN"]
-        self.message = "Container %s has added dangerous capabilities " + ",".join(self.dangerous_cap)
+        self.message = "Container %s has added dangerous capabilities " + ",".join(DANGEROUS_CAP)
 
     def scan(self):
-        check_cap = lambda add: bool(set(map(str.upper, add)) & set(self.dangerous_cap))
+        check_cap = lambda add: bool(set(map(str.upper, add)) & set(DANGEROUS_CAP))
         container_cond = (q.securityContext.capabilities.add != None) & \
                          (q.securityContext.capabilities.add.test(check_cap))
         for workload, Spec in SPEC_DICT.items():
@@ -37,13 +39,8 @@ class K006(Rule):
 
 class K007(Rule):
     # insecureCapabilities
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.insecure_cap = ["NET_ADMIN", "CHOWN", "DAC_OVERRIDE", "FSETID", "FOWNER", "MKNOD", "NET_RAW", "SETGID",
-                             "SETUID", "SETFCAP", "SETPCAP", "NET_BIND_SERVICE", "SYS_CHROOT", "KILL", "AUDIT_WRITE"]
-
     def scan(self):
-        check_cap = lambda drop: (set(map(str.upper, drop)) == set(self.insecure_cap)) or \
+        check_cap = lambda drop: (set(map(str.upper, drop)) == set(INSECURE_CAP)) or \
                                  "ALL" in list(map(str.upper, drop))
         container_cond = ~(q.securityContext.capabilities.drop.test(check_cap))
         for workload, Spec in SPEC_DICT.items():
@@ -52,3 +49,22 @@ class K007(Rule):
                 (q.metadata.name.test(wc.name)) & (Spec.containers.any(container_cond)) & Spec.containers.test(
                     wc.only_output))
             self.container_output[workload] = wc.output
+
+
+class K008(Rule):
+    # sensitiveContainerEnvVar
+    def scan(self):
+        key_combined = "(" + ")|(".join(SENSITIVE_KEY_REGEX) + ")"
+        val_combined = "(" + ")|(".join(SENSITIVE_VALUE_REGEX) + ")"
+        check_regex = lambda data: any([(bool(re.search(key_combined, kv.get("name", ""), flags=re.IGNORECASE)) |
+                                         bool(re.search(val_combined, kv.get("value", ""), flags=re.IGNORECASE))) &
+                                        (not bool(kv.get("valueFrom")))
+                                        for kv in data])
+        condition = q.env.test(check_regex)
+        for workload, Spec in SPEC_DICT.items():
+            wc = Workload()
+            self.output[workload] = getattr(self.db, workload).search(
+                (q.metadata.name.test(wc.name)) & (Spec.containers.any(condition)) & Spec.containers.test(
+                    wc.insensitive_env, key_combined, val_combined))
+            self.container_output[workload] = wc.output
+

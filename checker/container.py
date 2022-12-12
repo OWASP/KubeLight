@@ -1,12 +1,8 @@
+import re
 from checker.utils import dget, fget
 
 
-class Resource:
-    def __init__(self):
-        self.log = []
-
-
-class Container(Resource):
+class Container:
     def __init__(self, container):
         super().__init__()
         self.container = container
@@ -36,8 +32,8 @@ class Container(Resource):
     def name(self):
         return dget(self.container, "name", default="")
 
-    def dangerous_capabilities(self):
-        pass
+    def env_vars(self):
+        return self.container.get("env", [])
 
     def add_capabilities(self):
         return [item.upper() for item in fget(self.capabilities, "add", default=[])]
@@ -52,65 +48,4 @@ class Container(Resource):
         if "ALL" in add or len(drop) == 0:
             self.log.append("Container %s: Insecure capabilities: `ALL` is Added or Nothing is Dropped" % self.name)
             return False
-        return True
-
-
-class Workload(Resource):
-    def __init__(self):
-        super().__init__()
-        self.output = {}
-
-    def name(self, name):
-        self.name = name
-        return True
-
-    def spec(self, spec):
-        self.spec = spec
-        return True
-
-    def metadata(self, metadata={}):
-        # Pod Spec metadata for Workloads.
-        self.metadata = metadata
-        return True
-
-    @property
-    def annotations(self):
-        # Template Annotations - Pod Spec for Workloads.
-        return self.metadata.get("annotations", {})
-
-    @property
-    def seccomp(self):
-        return dget(self.spec, "securityContext.seccompProfile.type", default="")
-
-    @property
-    def selinux(self):
-        return dget(self.spec, "securityContext.seLinuxOptions.level", default="")
-
-    def has_apparmor(self, name):
-        return "container.apparmor.security.beta.kubernetes.io/" + name in self.annotations.keys()
-
-    def linux_hardening(self, containers):
-        not_hardened_containers = []
-        for container in containers:
-            container = Container(container)
-            name = container.name
-            selinux = container.selinux(self.selinux)
-            seccomp = container.seccomp(self.seccomp)
-            if not self.has_apparmor(name):
-                container.log.append("Container %s: AppArmor labels is not set" % name)
-            if (seccomp and seccomp.lower() != "unconfined") or selinux or (container.hardened_capabilities()) \
-                    or self.has_apparmor(name):
-                pass
-            else:
-                container.log.append("Container %s: Hardened" % name)
-                not_hardened_containers.append({"container": container.container, "log": container.log})
-        self.output[self.name] = not_hardened_containers
-        if len(not_hardened_containers):
-            return True
-        else:
-            return False
-
-    def only_output(self, containers, message="Container %s has issue"):
-        self.output[self.name] = [{"container": Container(c).container, "log": [message % Container(c).name]} for c in
-                                  containers]
         return True

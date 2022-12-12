@@ -1,5 +1,5 @@
 from checker.rule import Rule
-from core.settings import q
+from checker.settings import q
 
 
 class K0013(Rule):

@@ -1,7 +1,7 @@
 from checker.rule import Rule
 from checker.utils import cluster_role_binding_name_check, role_binding_name_check, \
     cluster_role_admin_name_check
-from core.settings import q
+from checker.settings import q
 
 
 class K0019(Rule):

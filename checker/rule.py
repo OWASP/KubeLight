@@ -1,6 +1,4 @@
 
-
-
 class Rule:
     """
     Parent class for Rules to execute the query.
