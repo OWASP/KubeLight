@@ -1,5 +1,7 @@
+import re
 from checker.rule import Rule
-from checker.settings import q
+from checker.settings import q, SPEC_DICT
+from checker.workload import Workload
 
 
 class K0013(Rule):
@@ -30,5 +32,33 @@ class K0015(Rule):
     # pdbDisruptionsIsZero
     def scan(self):
         self.output["PodDisruptionBudget"] = self.db.PodDisruptionBudget.search((q.spec.minAvailable == "100%") |
-                                                                                (q.spec.maxUnavailable.one_of([0, "0", "0%"])))
+                                                                                (q.spec.maxUnavailable.one_of(
+                                                                                    [0, "0", "0%"])))
         print(self.output)
+
+
+class K0010(Rule):
+    # Image Tag not specified, should not be latest.
+    def scan(self):
+        check_regex = lambda image: bool(re.match("^.+:.+$", image)) & (not bool(re.match("^.+:latest$", image)))
+        condition = ~(q.image.test(check_regex))
+
+        for workload, Spec in SPEC_DICT.items():
+            wc = Workload()
+            self.output[workload] = getattr(self.db, workload).search(
+                (q.metadata.name.test(wc.name)) & Spec.containers.any(condition) & Spec.containers.test(
+                    wc.image_tag_latest))
+            self.container_output[workload] = wc.output
+        print(self.container_output)
+
+
+class K0011(Rule):
+    def scan(self):
+        condition = ~(q.imagePullPolicy == "Always")
+        for workload, Spec in SPEC_DICT.items():
+            wc = Workload()
+            self.output[workload] = getattr(self.db, workload).search(
+                (q.metadata.name.test(wc.name)) & Spec.containers.any(condition) & Spec.containers.test(
+                    wc.image_pull_policy))
+            self.container_output[workload] = wc.output
+        print(self.container_output)

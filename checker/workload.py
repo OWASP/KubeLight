@@ -81,3 +81,13 @@ class Workload:
                 log.append("Configmap key {%s} has sensitive data"%key)
         self.output[self.name] = {"data":data, "log": log}
         return True
+
+    def image_tag_latest(self, containers):
+        self.output[self.name] = [{"container": c.container, "log": ["Container %s has image {%s} tag set to latest" % (c.name, c.image)]} for c in
+                                  [Container(c) for c in containers]]
+        return True
+
+    def image_pull_policy(self, containers):
+        self.output[self.name] = [{"container": c.container, "log": ["Pull policy is not set to {Always} for container %s with image {%s} " % (c.name, c.image)]} for c in
+                                  [Container(c) for c in containers]]
+        return True

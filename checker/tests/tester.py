@@ -26,7 +26,7 @@ class CheckerTester:
     def run(self):
         for rulename in self.testcases_files:
             for filename in self.testcases_files[rulename]:
-                if filename in filename:
+                if "K0011" in filename:
                     db = KubeDB(rulename)
                     data = yaml.safe_load_all(open(filename).read())
                     for res in data:

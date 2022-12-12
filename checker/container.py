@@ -29,6 +29,10 @@ class Container:
         return dget(self.container, "securityContext.capabilities", default={})
 
     @property
+    def image(self):
+        return dget(self.container, "image", default="")
+
+    @property
     def name(self):
         return dget(self.container, "name", default="")
 
