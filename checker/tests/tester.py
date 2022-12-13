@@ -26,7 +26,7 @@ class CheckerTester:
     def run(self):
         for rulename in self.testcases_files:
             for filename in self.testcases_files[rulename]:
-                if True or "K008" in filename:
+                if False or "K0034" in filename:
                     db = KubeDB(rulename)
                     data = yaml.safe_load_all(open(filename).read())
                     for res in data:
@@ -36,10 +36,8 @@ class CheckerTester:
                     db.truncate()
                     if CheckerTester.input_status(filename) == "PASS" and CheckerTester.is_output_empty(rule.output):
                         print("Check Passed as expected", filename)
-                        #pass
                     elif CheckerTester.input_status(filename) == "FAIL" and not CheckerTester.is_output_empty(rule.output):
                         print("Check Failed as expected", filename)
-                        #pass
                     else:
                         print("Test result NOT expected", filename)
                         self.failed_data.append([filename, rule.output])

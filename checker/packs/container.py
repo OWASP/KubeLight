@@ -4,6 +4,7 @@ from checker.rule import Rule
 from checker.settings import q, SPEC_DICT, INSECURE_CAP, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
     DANGEROUS_CAP
 
+
 class K005(Rule):
     # dangerousCapabilities
     def __init__(self, *args, **kwargs):
@@ -58,13 +59,22 @@ class K0031(Rule):
 class K0032(Rule):
     def scan(self):
         self.message = "Container {c.name} is privileged"
-        self.query = (q.securityContext.privileged.exists() & (q.securityContext.privileged == True))|\
-                     (q.securityContext.capabilities.add.test(lambda add: add.upper() == "SYS_ADMIN"))
+        self.query = (q.securityContext.privileged.exists() & (q.securityContext.privileged == True)) | \
+                     (q.securityContext.capabilities.add.test(lambda add: "SYS_ADMIN" in [c.upper() for c in add]))
         self.scan_workload_any_container()
 
 
 class K0033(Rule):
     def scan(self):
         self.message = "AllowPrivilegeEscalation is not explicitly set on Container {c.name}"
-        self.query = ~(q.securityContext.allowPrivilegeEscalation.exists() & (q.securityContext.allowPrivilegeEscalation == False))
+        self.query = ~(q.securityContext.allowPrivilegeEscalation.exists() & (
+                    q.securityContext.allowPrivilegeEscalation == False))
+        self.scan_workload_any_container()
+
+
+class K0034(Rule):
+    def scan(self):
+        self.message = "readOnlyRootFilesystem is not enabled on Container {c.name}"
+        self.query = ~(q.securityContext.readOnlyRootFilesystem.exists() & (
+                    q.securityContext.readOnlyRootFilesystem == True))
         self.scan_workload_any_container()
