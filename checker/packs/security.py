@@ -1,4 +1,5 @@
 import re
+
 from checker.rule import Rule
 from checker.settings import q, SPEC_DICT, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX
 from checker.workload import Workload
@@ -61,3 +62,19 @@ class K0030(Rule):
     def scan(self):
         self.output["Ingress"] = self.db.Ingress.search(~q.spec.tls.exists())
 
+
+class K0036(Rule):
+    def scan(self):
+        pods = self.db.Pod.search((q.kind == "Pod") & (q.metadata.labels.exists()))
+        pod_labels = [pod["metadata"]["labels"] for pod in pods]
+        plabels = []
+        for label in pod_labels:
+            plabels.extend([(k, v) for k, v in label.items()])
+        check_label = lambda labels: bool(set([(k, v) for k, v in labels.items()]) & set(plabels))
+        check_pt = lambda pt: set(map(str.upper, pt)) == {"INGRESS", "EGRESS"}
+        Spec = q.spec
+        condition = (
+                Spec.podSelector.matchLabels.exists() & Spec.ingress.exists() & Spec.egress.exists() &
+                Spec.policyTypes.exists() & Spec.policyTypes.test(check_pt) &
+                Spec.podSelector.matchLabels.test(check_label))
+        self.output["NetworkPolicy"] = self.db.NetworkPolicy.search(~condition)
