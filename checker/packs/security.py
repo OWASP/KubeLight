@@ -51,7 +51,7 @@ class K009(Rule):
                                         bool(re.search(val_comb, v, flags=re.IGNORECASE))
                                         for k, v in data.items()])
         wc = Workload()
-        self.output["ConfigMap"] = self.db.ConfigMap.search(q.metadata.name.test(wc.name) &
+        self.output["ConfigMap"] = self.db.ConfigMap.search(q.metadata.name.test(wc.set_name) &
                                                             q.data.test(check_regex) & q.data.test(wc.insensitive_cm,
                                                                                                    key_comb, val_comb))
         self.configmap_output = wc.output

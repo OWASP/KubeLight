@@ -22,7 +22,7 @@ class K006(Rule):
     # linuxHardening
     def scan(self):
         self.wl_func = "linux_hardening"
-        self.scan_workload_securityContext()
+        self.scan_workload_any_container()
 
 
 class K007(Rule):
@@ -68,7 +68,7 @@ class K0033(Rule):
     def scan(self):
         self.message = "AllowPrivilegeEscalation is not explicitly set on Container {c.name}"
         self.query = ~(q.securityContext.allowPrivilegeEscalation.exists() & (
-                    q.securityContext.allowPrivilegeEscalation == False))
+                q.securityContext.allowPrivilegeEscalation == False))
         self.scan_workload_any_container()
 
 
@@ -76,5 +76,11 @@ class K0034(Rule):
     def scan(self):
         self.message = "readOnlyRootFilesystem is not enabled on Container {c.name}"
         self.query = ~(q.securityContext.readOnlyRootFilesystem.exists() & (
-                    q.securityContext.readOnlyRootFilesystem == True))
+                q.securityContext.readOnlyRootFilesystem == True))
+        self.scan_workload_any_container()
+
+
+class K0035(Rule):
+    def scan(self):
+        self.wl_func = "non_root"
         self.scan_workload_any_container()

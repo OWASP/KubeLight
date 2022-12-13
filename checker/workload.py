@@ -7,17 +7,20 @@ from checker.utils import dget
 class Workload:
     def __init__(self):
         super().__init__()
+        self.name = ""
+        self.metadata = {}
+        self.spec = {}
         self.output = {}
 
-    def name(self, name):
+    def set_name(self, name):
         self.name = name
         return True
 
-    def spec(self, spec):
+    def set_spec(self, spec):
         self.spec = spec
         return True
 
-    def metadata(self, metadata={}):
+    def set_metadata(self, metadata={}):
         # Pod Spec metadata for Workloads.
         self.metadata = metadata
         return True
@@ -38,6 +41,14 @@ class Workload:
     def has_apparmor(self, name):
         return "container.apparmor.security.beta.kubernetes.io/" + name in self.annotations.keys()
 
+    @property
+    def runAsNonRoot(self):
+        return dget(self.spec, "securityContext.runAsNonRoot", default=None)
+
+    @property
+    def runAsUser(self):
+        return dget(self.spec, "securityContext.runAsUser", default=None)
+
     def linux_hardening(self, containers):
         not_hardened_containers = []
         for container in containers:
@@ -55,6 +66,29 @@ class Workload:
                 not_hardened_containers.append({"container": container.container, "log": container.log})
         self.output[self.name] = not_hardened_containers
         if len(not_hardened_containers):
+            return True
+        else:
+            return False
+
+    def non_root(self, containers):
+        not_root_containers = []
+        for container in containers:
+            container = Container(container)
+            name = container.name
+            runAsNonroot = container.runAsNonRoot(self.runAsNonRoot)
+            print("Pod",self.runAsNonRoot,"Container",runAsNonroot)
+            runAsUser = container.runAsNonRoot(self.runAsNonRoot)
+            print("Pod", self.runAsUser, "Container", runAsUser)
+            if runAsUser == "0":
+                container.log.append("Container %s can run as root, runAsUser set " % name)
+                not_root_containers.append({"container": container.container, "log": container.log})
+            elif not runAsNonroot:
+                container.log.append("Container %s can run as root" % name)
+                not_root_containers.append({"container": container.container, "log": container.log})
+            else:
+                pass
+        self.output[self.name] = not_root_containers
+        if len(not_root_containers):
             return True
         else:
             return False

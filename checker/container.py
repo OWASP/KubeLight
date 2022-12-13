@@ -24,6 +24,19 @@ class Container:
             self.log.append("Container %s: inherits the workload seLinuxOptions level" % self.name)
         return wlSelinux if not con_selinux else con_selinux
 
+    def runAsNonRoot(self, wlRoot=None):
+        con_non_root = dget(self.container, "securityContext.runAsNonRoot", default=None)
+        if con_non_root != None:
+            # It is defined
+            return con_non_root
+        return wlRoot
+
+    def runAsUser(self, wlUser=None):
+        con_run_user = dget(self.container, "securityContext.runAsUser", default=None)
+        if con_run_user != None:
+            return con_run_user
+        return wlUser
+
     @property
     def capabilities(self):
         return dget(self.container, "securityContext.capabilities", default={})
