@@ -3,6 +3,8 @@
   width="200" alt="KubeLight Logo"/>
 </p>
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/owasp/kubelight/blob/main/LICENSE)
+
 # OWASP KubeLight - Kubernetes Security Scanner
 `Scan your Kubernetes Cluster for Security & Compliance`
 
