@@ -2,7 +2,7 @@ import re
 
 from checker.rule import Rule
 from checker.settings import q, SPEC_DICT, INSECURE_CAP, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
-    DANGEROUS_CAP
+    DANGEROUS_CAP, TRUSTED_REGISTRY
 
 
 class K005(Rule):
@@ -83,4 +83,15 @@ class K0034(Rule):
 class K0035(Rule):
     def scan(self):
         self.wl_func = "non_root"
+        self.scan_workload_any_container()
+
+
+class K0037(Rule):
+    # Untrusted registry
+    def scan(self):
+        self.message = "Container {c.name}: Image from untrusted registry {c.image}"
+        extract_registry = lambda image_string: next((part for part in re.split('/', image_string) if part),
+                                                     'docker.io')
+        check_regex = lambda image: extract_registry(image) not in TRUSTED_REGISTRY
+        self.query = (q.image.test(check_regex))
         self.scan_workload_any_container()
