@@ -29,3 +29,12 @@ class Rule:
             self.output[workload] = getattr(self.db, workload).search(condition)
             self.container_output[workload] = wc.output
         print(self.container_output)
+
+    def scan_rbac_binding_rules(self, *args):
+        roles = self.db.Role.search(self.query)
+        cluster_roles = self.db.ClusterRole.search(self.query)
+        cluster_roles_ref = q.roleRef.name.one_of(list(set([item["metadata"]["name"] for item in cluster_roles])))
+        roles_ref = q.roleRef.name.one_of(list(set([item["metadata"]["name"] for item in roles])))
+        self.output["RoleBinding"] = self.db.RoleBinding.search((q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
+        self.output["RoleBinding"].extend(self.db.RoleBinding.search((q.roleRef.kind == "Role") & roles_ref))
+        self.output["ClusterRoleBinding"] = self.db.ClusterRoleBinding.search((q.roleRef.kind == "ClusterRole") & cluster_roles_ref)

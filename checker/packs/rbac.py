@@ -64,8 +64,8 @@ class K0022(Rule):
             ~q.metadata.name.test(cluster_role_admin_name_check) & q.rules.any((q.resources.test(
                 lambda res: bool({item.lower() for item in res} & {"*", "pods/exec", "pods/attach"}))) & (q.verbs.test(
                 lambda ver: bool({item.lower() for item in ver} & {"*", "get", "create"}))) & (
-                                                                                               q.apiGroups.any(
-                                                                                                   ["*", ""]))))
+                                                                                   q.apiGroups.any(
+                                                                                       ["*", ""]))))
 
 
 class K0023(Rule):
@@ -80,7 +80,6 @@ class K0023(Rule):
 
 class K0024(Rule):
     # clusterrolebindingPodExecAttach.yaml
-
     def scan(self):
         clusterroles = self.db.ClusterRole.search((q.rules.any(
             (q.resources.test(lambda res: bool({item.lower() for item in res} & {"*", "pods/exec", "pods/attach"}))) &
@@ -119,3 +118,43 @@ class K0026(Rule):
             & (q.roleRef.kind == "ClusterRole") &
             q.roleRef.name.one_of(list(set([item["metadata"]["name"] for item in
                                             clusterroles]))))
+
+
+class K0039(Rule):
+    # subject list secrets
+    def scan(self):
+        self.query = q.rules.any(
+            (q.resources.test(lambda res: bool({item.lower() for item in res} & {"*", "secrets"}))) &
+            (q.verbs.test(lambda ver: bool({item.lower() for item in ver} & {"*", "get", "list", "watch"}))) &
+            (q.apiGroups.any(["*", ""])))
+        self.scan_rbac_binding_rules()
+
+
+class K0040(Rule):
+    # can delete events
+    def scan(self):
+        self.query = q.rules.any(
+            (q.resources.test(lambda res: bool({item.lower() for item in res} & {"*", "events"}))) &
+            (q.verbs.test(lambda ver: bool({item.lower() for item in ver} & {"delete", "deletecollection", "*"}))) &
+            (q.apiGroups.any(["*", ""])))
+        self.scan_rbac_binding_rules()
+
+
+class K0041(Rule):
+    # can port forward
+    def scan(self):
+        self.query = q.rules.any(
+            (q.resources.test(lambda res: bool({item.lower() for item in res} & {"pods/portforward", "pods/*", "*"}))) &
+            (q.verbs.test(lambda ver: bool({item.lower() for item in ver} & {"*", "create"}))) &
+            (q.apiGroups.any(["*", ""])))
+        self.scan_rbac_binding_rules()
+
+
+class K0042(Rule):
+    # can impersonate user
+    def scan(self):
+        self.query = q.rules.any(
+            (q.resources.test(lambda res: bool({item.lower() for item in res} & {"users", "serviceaccounts", "groups", "uids", "*"}))) &
+            (q.verbs.test(lambda ver: bool({item.lower() for item in ver} & {"impersonate", "*"}))) &
+            (q.apiGroups.any(["*", ""])))
+        self.scan_rbac_binding_rules()

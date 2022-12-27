@@ -1,0 +1,25 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: test
+  namespace: kube-system
+rules:
+- apiGroups: ["*"]
+  resources: ["rolebindings", "deployments","serviceaccounts", "services", "*"]
+  verbs: ["*", "watch", "impersonate", "update"]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name:  pod
+  namespace: kube-system
+subjects:
+- kind: User
+  name: jane
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: test
+  apiGroup: rbac.authorization.k8s.io
