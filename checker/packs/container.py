@@ -95,3 +95,12 @@ class K0037(Rule):
         check_regex = lambda image: extract_registry(image) not in TRUSTED_REGISTRY
         self.query = (q.image.test(check_regex))
         self.scan_workload_any_container()
+
+
+class K0046(Rule):
+    # CVE-2022-47633-kyverno-signature-bypass
+    def scan(self):
+        pattern = r"kyverno:.*1\.8\.([3-4])"
+        check_regex = lambda image: bool(re.search(pattern,image))
+        self.query = (q.image.test(check_regex))
+        self.scan_workload_any_container()

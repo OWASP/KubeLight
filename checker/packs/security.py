@@ -78,3 +78,23 @@ class K0036(Rule):
                 Spec.policyTypes.exists() & Spec.policyTypes.test(check_pt) &
                 Spec.podSelector.matchLabels.test(check_label))
         self.output["NetworkPolicy"] = self.db.NetworkPolicy.search(~condition)
+
+
+class K0043(Rule):
+    # CronJob exists
+    def scan(self):
+        self.output["CronJob"] = self.db.CronJob.search(q.kind == "CronJob")
+
+
+class K0044(Rule):
+    # ValidatingWebhookConfiguration
+    def scan(self):
+        self.output["ValidatingWebhookConfiguration"] = \
+            self.db.ValidatingWebhookConfiguration.search(q.kind == "ValidatingWebhookConfiguration")
+
+
+class K0045(Rule):
+    # MutatingWebhookConfiguration
+    def scan(self):
+        self.output["MutatingWebhookConfiguration"] = \
+            self.db.MutatingWebhookConfiguration.search(q.kind == "MutatingWebhookConfiguration")

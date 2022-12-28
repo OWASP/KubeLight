@@ -1,6 +1,6 @@
 from checker.rule import Rule
 from checker.utils import cluster_role_binding_name_check, role_binding_name_check, \
-    cluster_role_admin_name_check
+    cluster_role_admin_name_check, rbac_rule_check
 from checker.settings import q
 
 
@@ -154,7 +154,18 @@ class K0042(Rule):
     # can impersonate user
     def scan(self):
         self.query = q.rules.any(
-            (q.resources.test(lambda res: bool({item.lower() for item in res} & {"users", "serviceaccounts", "groups", "uids", "*"}))) &
+            (q.resources.test(lambda res: bool(
+                {item.lower() for item in res} & {"users", "serviceaccounts", "groups", "uids", "*"}))) &
             (q.verbs.test(lambda ver: bool({item.lower() for item in ver} & {"impersonate", "*"}))) &
+            (q.apiGroups.any(["*", ""])))
+        self.scan_rbac_binding_rules()
+
+
+class K0048(Rule):
+    # Can update coredns configmap
+    def scan(self):
+        self.query = q.rules.any(
+            (q.resources.test(rbac_rule_check,("configmap", "*"))) &
+            (q.verbs.test(rbac_rule_check,("update", "patch", "*"))) &
             (q.apiGroups.any(["*", ""])))
         self.scan_rbac_binding_rules()

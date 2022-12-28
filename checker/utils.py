@@ -3,11 +3,11 @@ from functools import reduce
 
 def dget(dictionary, keys, default={}):
     try:
-        return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
+        return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."),
+                      dictionary)
     except Exception as e:
-        print("######", str(e),"######")
+        print("######", str(e), "######")
         return default
-
 
 
 def fget(dictionary, keys, default={}):
@@ -31,3 +31,12 @@ def role_binding_name_check(name):
 def cluster_role_admin_name_check(name):
     rb_names = ["gce:podsecuritypolicy:calico-sa", "edit", "admin", "cluster-admin"]
     return True if name in rb_names or name.startswith("system:") else False
+
+
+def rbac_set(a):
+    exclude = ["*", ""]
+    return {item for item in a} | {item + "s" for item in a if item not in exclude}
+
+
+def rbac_rule_check(a, b):
+    return bool(rbac_set(a) & rbac_set(b))

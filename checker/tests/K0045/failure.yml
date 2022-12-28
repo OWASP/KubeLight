@@ -1,0 +1,44 @@
+---
+kind: MutatingWebhookConfiguration
+apiVersion: admissionregistration.k8s.io/v1
+metadata:
+  name: test-webhook
+  annotations:
+    cert-manager.io/inject-ca-from: default/client
+webhooks:
+  - name: pod-label-add.trstringer.com
+    clientConfig:
+      service:
+        namespace: default
+        name: mutating-webhook
+        path: /mutate
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+        operations: ["CREATE"]
+        scope: Namespaced
+    sideEffects: None
+    admissionReviewVersions: ["v1"]
+---
+kind: MutatingWebhookConfiguration
+apiVersion: admissionregistration.k8s.io/v1
+metadata:
+  name: test-webhook2
+  annotations:
+    cert-manager.io/inject-ca-from: default/client
+webhooks:
+  - name: test-webhook2
+    clientConfig:
+      service:
+        namespace: default
+        name: mutating-webhook
+        path: /mutate
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["deployments"]
+        operations: ["CREATE"]
+        scope: Namespaced
+    sideEffects: None
+    admissionReviewVersions: ["v1"]

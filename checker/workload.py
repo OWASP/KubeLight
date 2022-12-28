@@ -95,8 +95,7 @@ class Workload:
 
     def only_output(self, containers, message):
         self.output[self.name] = [{"container": Container(c).container, "log": [message.format(c=Container(c))]} for c
-                                  in
-                                  containers]
+                                  in containers]
         return True
 
     def insensitive_env(self, containers, key_comb, value_comb):

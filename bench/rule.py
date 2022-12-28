@@ -1,0 +1,4 @@
+
+
+class Rule:
+    pass
