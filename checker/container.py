@@ -49,6 +49,10 @@ class Container:
     def name(self):
         return dget(self.container, "name", default="")
 
+    @property
+    def volumeMounts(self):
+        return dget(self.container, "volumeMounts", default=[])
+
     def env_vars(self):
         return self.container.get("env", [])
 
@@ -67,3 +71,12 @@ class Container:
             return False
         return True
 
+    def insecure_hostpath_volume(self, volumes):
+        flag = False
+        mounts = [item.get("name") for item in self.volumeMounts if item.get("readOnly") != True]
+        for volume in volumes:
+            volume_name = volume.get("name")
+            if volume.get("hostPath") and volume_name in mounts:
+                flag = True
+                self.log.append("Container %s: has volumeMount %s on writable hostPath" % (self.name, volume_name))
+        return flag

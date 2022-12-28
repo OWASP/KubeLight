@@ -49,6 +49,10 @@ class Workload:
     def runAsUser(self):
         return dget(self.spec, "securityContext.runAsUser", default=None)
 
+    @property
+    def volumes(self):
+        return dget(self.spec, "volumes", default = [])
+
     def linux_hardening(self, containers):
         not_hardened_containers = []
         for container in containers:
@@ -117,3 +121,18 @@ class Workload:
                 log.append("Configmap key {%s} has sensitive data" % key)
         self.output[self.name] = {"data": data, "log": log}
         return True
+
+    def host_path_rw(self, containers):
+        insecure_containers = []
+        for container in containers:
+            container = Container(container)
+            name = container.name
+            wl_volumes = self.volumes
+            if container.insecure_hostpath_volume(wl_volumes):
+                container.log.append("Container %s: has insecure volume mount on hostPath" % name)
+                insecure_containers.append({"container": container.container, "log": container.log})
+        self.output[self.name] = insecure_containers
+        if len(insecure_containers):
+            return True
+        else:
+            return False

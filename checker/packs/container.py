@@ -115,3 +115,10 @@ class K0047(Rule):
         check_regex = lambda image: bool(re.search(pattern, image))
         self.query = (q.image.test(check_regex))
         self.scan_workload_any_container()
+
+class K0051(Rule):
+    # host mount rw
+    def scan(self):
+        self.wl_func = "host_path_rw"
+        self.scan_workload_any_container()
+
