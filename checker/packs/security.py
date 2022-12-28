@@ -65,7 +65,7 @@ class K0030(Rule):
 
 class K0036(Rule):
     def scan(self):
-        pods = self.db.Pod.search((q.kind == "Pod") & (q.metadata.labels.exists()))
+        pods = self.db.Pod.search(q.metadata.labels.exists())
         pod_labels = [pod["metadata"]["labels"] for pod in pods]
         plabels = []
         for label in pod_labels:
@@ -83,18 +83,18 @@ class K0036(Rule):
 class K0043(Rule):
     # CronJob exists
     def scan(self):
-        self.output["CronJob"] = self.db.CronJob.search(q.kind == "CronJob")
+        self.output["CronJob"] = self.db.CronJob.all()
 
 
 class K0044(Rule):
     # ValidatingWebhookConfiguration
     def scan(self):
         self.output["ValidatingWebhookConfiguration"] = \
-            self.db.ValidatingWebhookConfiguration.search(q.kind == "ValidatingWebhookConfiguration")
+            self.db.ValidatingWebhookConfiguration.all()
 
 
 class K0045(Rule):
     # MutatingWebhookConfiguration
     def scan(self):
         self.output["MutatingWebhookConfiguration"] = \
-            self.db.MutatingWebhookConfiguration.search(q.kind == "MutatingWebhookConfiguration")
+            self.db.MutatingWebhookConfiguration.all()

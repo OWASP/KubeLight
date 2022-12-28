@@ -1,5 +1,4 @@
 from core.db import KubeDB
-from core.k8s import Kube
 from core.settings import RESOURCES, CHECKER_POOL_SIZE
 from checker.packs import *
 
@@ -14,11 +13,10 @@ class Checker:
     def __init__(self, namespace=None):
         self.namespace = namespace
         self.db = KubeDB(namespace) if namespace else None
-        self.kube = Kube()
 
     def populate_resources(self):
         for resource in RESOURCES:
-            data = self.kube.resources_in_namespace(self.namespace, resource)
+            data = Kube.resources_in_namespace(self.namespace, resource)
             self.db.populate(resource, data)
 
     def clean(self):
@@ -41,6 +39,6 @@ class Checker:
     @staticmethod
     def run():
         pool = Pool(CHECKER_POOL_SIZE)
-        pool.map(Checker.initiate_scan, Kube().namespace_names())
+        pool.map(Checker.initiate_scan, Kube.namespace_names())
         pool.close()
         pool.join()
