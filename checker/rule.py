@@ -11,6 +11,7 @@ class Rule:
         self.db = db
         self.output = {}
         self.container_output = {}
+        self.log_output = []
         self.message = ""
         self.query = None
         self.wl_func = "only_output"
@@ -39,3 +40,7 @@ class Rule:
         self.output["RoleBinding"] = self.db.RoleBinding.search((q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
         self.output["RoleBinding"].extend(self.db.RoleBinding.search((q.roleRef.kind == "Role") & roles_ref))
         self.output["ClusterRoleBinding"] = self.db.ClusterRoleBinding.search((q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
+
+    def logger(self, items=[]):
+        self.log_output = items
+        return True

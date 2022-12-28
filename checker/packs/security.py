@@ -98,3 +98,15 @@ class K0045(Rule):
     def scan(self):
         self.output["MutatingWebhookConfiguration"] = \
             self.db.MutatingWebhookConfiguration.all()
+
+
+class K0052(Rule):
+    # dangerous host path
+    def scan(self):
+        dangerous_path = ["/etc","/var"]
+        check_path = lambda path: path and any([path.startswith(item) for item in dangerous_path])
+        for workload, Spec in SPEC_DICT.items():
+            self.output[workload] = getattr(self.db, workload).search\
+                (Spec.volumes.any(q.hostPath.path.test(check_path)) & Spec.volumes.test(self.logger))
+
+        print(self.log_output)
