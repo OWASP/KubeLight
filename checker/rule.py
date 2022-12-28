@@ -14,6 +14,7 @@ class Rule:
         self.message = ""
         self.query = None
         self.wl_func = "only_output"
+        self.type = "NAMESPACE"
 
     def scan_workload_any_container(self, *args):
         for workload, Spec in SPEC_DICT.items():

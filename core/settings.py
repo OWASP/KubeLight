@@ -1,7 +1,7 @@
 INSERT_CHUNK_SIZE = 1000
 CHECKER_POOL_SIZE = 5
 
-CLUSTER_SCOPED_RESOURCES = ['APIService', 'ClusterRole', 'ClusterRoleBinding']
+CLUSTER_SCOPED_RESOURCES = ['Node','APIService', 'ClusterRole', 'ClusterRoleBinding']
 
 NAMESPACE_SCOPED_RESOURCES = ['ConfigMap', 'CronJob', 'DaemonSet',
                               'Deployment', 'Job', 'NetworkPolicy', 'PodDisruptionBudget', 'Pod',
