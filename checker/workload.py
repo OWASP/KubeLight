@@ -1,7 +1,7 @@
 import re
 
 from checker.container import Container
-from checker.utils import dget
+from checker.utils import dget, arr_query_on_fly
 
 
 class Workload:
@@ -11,6 +11,7 @@ class Workload:
         self.metadata = {}
         self.spec = {}
         self.output = {}
+        self.query = None
 
     def set_name(self, name):
         self.name = name
@@ -97,10 +98,13 @@ class Workload:
         else:
             return False
 
-    def only_output(self, containers, message):
-        self.output[self.name] = [{"container": Container(c).container, "log": [message.format(c=Container(c))]} for c
-                                  in containers]
-        return True
+    def container_output(self, containers, message):
+        data = arr_query_on_fly(containers, self.query)
+        output = [{"container": Container(c).container, "log": [message.format(c=Container(c))]} for c
+                                 in data]
+        self.output[self.name] = output
+        return bool(output)
+
 
     def insensitive_env(self, containers, key_comb, value_comb):
         sensitive_containers = []

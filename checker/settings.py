@@ -34,3 +34,16 @@ TRUSTED_REGISTRY = [
     "quay.io",
     "jfrog.io"
 ]
+
+UNTRUSTED_REGISTRY = []
+
+CLOUD_UNSAFE_MOUNT_PATHS = {
+    "aws": ["/.aws/", "/.aws/config/", "/.aws/credentials/"],
+    "aks": ["/etc/", "/etc/kubernetes/", "/etc/kubernetes/azure.json", "/.azure/", "/.azure/credentials/",
+            "/etc/kubernetes/azure.json"],
+    "gke": ["/.config/gcloud/", "/.config/", "/gcloud/", "/.config/gcloud/application_default_credentials.json",
+            "/gcloud/application_default_credentials.json"]
+}
+
+DANGEROUS_PATH = ["/etc", "/var"]
+DOCKER_PATH = ["/var/run/docker.sock", "/var/run/docker"]

@@ -11,10 +11,10 @@ class Rule:
         self.db = db
         self.output = {}
         self.container_output = {}
-        self.log_output = []
+        self.log_output = {}
         self.message = ""
         self.query = None
-        self.wl_func = "only_output"
+        self.wl_func = "container_output"
         self.type = "NAMESPACE"
 
     def scan_workload_any_container(self, *args):
@@ -24,6 +24,7 @@ class Rule:
             condition = (q.metadata.name.test(wc.set_name)) & (Spec.test(wc.set_spec)) & (
                         ~template.metadata.exists() | template.metadata.test(wc.set_metadata))
             if self.query:
+                wc.query = self.query
                 args = (self.message,) if not args else args
                 condition &= (Spec.containers.any(self.query)) & Spec.containers.test(getattr(wc, self.wl_func), *args)
             else:
@@ -40,7 +41,3 @@ class Rule:
         self.output["RoleBinding"] = self.db.RoleBinding.search((q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
         self.output["RoleBinding"].extend(self.db.RoleBinding.search((q.roleRef.kind == "Role") & roles_ref))
         self.output["ClusterRoleBinding"] = self.db.ClusterRoleBinding.search((q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
-
-    def logger(self, items=[]):
-        self.log_output = items
-        return True

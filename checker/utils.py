@@ -1,4 +1,5 @@
 from functools import reduce
+from core.db import ArrayDB
 
 
 def dget(dictionary, keys, default={}):
@@ -40,3 +41,23 @@ def rbac_set(a):
 
 def rbac_rule_check(a, b):
     return bool(rbac_set(a) & rbac_set(b))
+
+
+def match_labels(d1, d2):
+    # atleast one
+    return bool(set(d1.items()) & set(d2.items()))
+
+
+def label_in_lst(d1, lst):
+    for d2 in lst:
+        if set(d1.items()) & set(d2.items()):
+            return True
+    return False
+
+
+def arr_query_on_fly(items, query):
+    db = ArrayDB()
+    db.populate(items)
+    data = db.search(query)
+    db.truncate()
+    return data

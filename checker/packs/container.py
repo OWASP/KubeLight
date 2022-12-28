@@ -2,7 +2,7 @@ import re
 
 from checker.rule import Rule
 from checker.settings import q, SPEC_DICT, INSECURE_CAP, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
-    DANGEROUS_CAP, TRUSTED_REGISTRY
+    DANGEROUS_CAP, TRUSTED_REGISTRY, UNTRUSTED_REGISTRY
 
 
 class K005(Rule):
@@ -92,7 +92,8 @@ class K0037(Rule):
         self.message = "Container {c.name}: Image from untrusted registry {c.image}"
         extract_registry = lambda image_string: next((part for part in re.split('/', image_string) if part),
                                                      'docker.io')
-        check_regex = lambda image: extract_registry(image) not in TRUSTED_REGISTRY
+        check_regex = lambda image: (extract_registry(image) not in TRUSTED_REGISTRY) or \
+                                    (extract_registry(image) in UNTRUSTED_REGISTRY)
         self.query = (q.image.test(check_regex))
         self.scan_workload_any_container()
 
@@ -116,9 +117,9 @@ class K0047(Rule):
         self.query = (q.image.test(check_regex))
         self.scan_workload_any_container()
 
+
 class K0051(Rule):
     # host mount rw
     def scan(self):
         self.wl_func = "host_path_rw"
         self.scan_workload_any_container()
-

@@ -1,7 +1,9 @@
 import re
 
 from checker.rule import Rule
-from checker.settings import q, SPEC_DICT, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX
+from checker.utils import  label_in_lst
+from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
+    DANGEROUS_PATH, DOCKER_PATH, CLOUD_UNSAFE_MOUNT_PATHS
 from checker.workload import Workload
 
 
@@ -67,10 +69,7 @@ class K0036(Rule):
     def scan(self):
         pods = self.db.Pod.search(q.metadata.labels.exists())
         pod_labels = [pod["metadata"]["labels"] for pod in pods]
-        plabels = []
-        for label in pod_labels:
-            plabels.extend([(k, v) for k, v in label.items()])
-        check_label = lambda labels: bool(set([(k, v) for k, v in labels.items()]) & set(plabels))
+        check_label = lambda labels: label_in_lst(labels, pod_labels)
         check_pt = lambda pt: set(map(str.upper, pt)) == {"INGRESS", "EGRESS"}
         Spec = q.spec
         condition = (
@@ -103,10 +102,45 @@ class K0045(Rule):
 class K0052(Rule):
     # dangerous host path
     def scan(self):
-        dangerous_path = ["/etc","/var"]
-        check_path = lambda path: path and any([path.startswith(item) for item in dangerous_path])
+        check_path = lambda path: bool(path and any([path == item for item in DANGEROUS_PATH]))
         for workload, Spec in SPEC_DICT.items():
-            self.output[workload] = getattr(self.db, workload).search\
-                (Spec.volumes.any(q.hostPath.path.test(check_path)) & Spec.volumes.test(self.logger))
+            self.output[workload] = getattr(self.db, workload).search \
+                (Spec.volumes.any(q.hostPath.path.test(check_path)))
 
-        print(self.log_output)
+class K0053(Rule):
+    # alert-mount-credentials-path
+    @staticmethod
+    def fix_path(path):
+        if not re.match(r'[\w-]+\.', path) and not path.endswith("/"):
+            return f"{path}/"
+        return path
+
+    def scan(self):
+        check_path = lambda path: K0053.fix_path(path) in \
+                                  [item for v in CLOUD_UNSAFE_MOUNT_PATHS.values() for item in v]
+        for workload, Spec in SPEC_DICT.items():
+            self.output[workload] = getattr(self.db, workload).search \
+                (Spec.volumes.any(q.hostPath.path.exists() & q.hostPath.path.test(check_path)))
+
+
+
+class K0054(Rule):
+    def scan(self):
+        check_ssh = lambda port: int(port) in [22, 2222]
+        services = self.db.Service.search(
+            q.spec.selector.exists() & q.spec.ports.any(q.port.test(check_ssh) | q.targetPort.test(check_ssh)))
+        service_labels = [item["spec"]["selector"] for item in services]
+        check_label = lambda labels: label_in_lst(labels, service_labels)
+        for workload, Spec in SPEC_DICT.items():
+            template = SPEC_TEMPLATE_DICT[workload]
+            self.output[workload] = getattr(self.db, workload).search(template.metadata.labels.exists() &
+                                                                      template.metadata.labels.test(check_label))
+
+
+class K0055(Rule):
+    # dangerous host path
+    def scan(self):
+        check_path = lambda path: bool(path and any([path.startswith(item) for item in DOCKER_PATH]))
+        for workload, Spec in SPEC_DICT.items():
+            self.output[workload] = getattr(self.db, workload).search \
+                (Spec.volumes.any(q.hostPath.path.test(check_path)))

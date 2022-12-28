@@ -20,3 +20,13 @@ spec:
         - name : random
           value : "Hello from the environment"
     image : hashicorp/http-echo:0.2.3
+
+  - name: test-container3
+    env:
+      - name: random
+        value: "Hello from the environment"
+    image: hashicorp/http-echo:0.2.3
+    securityContext:
+      capabilities:
+        add: [ "NET_ADMIN", "SYS_ADMIN" ]
+      allowPrivilegeEscalation: false

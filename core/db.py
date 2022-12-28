@@ -17,7 +17,7 @@ class KubeDB:
     def truncate(self):
         for resource in RESOURCES:
             self.database.table(resource).truncate()
-        self.database.truncate()
+        self.database.drop_tables()
         self.database = None
 
     def search(self, table_name, condition):
@@ -27,3 +27,17 @@ class KubeDB:
         data_chunked = [data[i:i + INSERT_CHUNK_SIZE] for i in range(0, len(data), INSERT_CHUNK_SIZE)]
         for items in data_chunked:
             self.database.table(table_name).insert_multiple(items)
+
+
+class ArrayDB:
+    def __init__(self):
+        self.database = TinyDB(storage=MemoryStorage)
+
+    def populate(self, data):
+        self.database.insert_multiple(data)
+
+    def truncate(self):
+        self.database.drop_tables()
+
+    def search(self, query):
+        return self.database.search(query)

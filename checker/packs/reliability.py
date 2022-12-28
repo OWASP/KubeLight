@@ -1,5 +1,6 @@
 import re
 from checker.rule import Rule
+from checker.utils import label_in_lst
 from checker.settings import q, SPEC_DICT
 
 
@@ -39,11 +40,8 @@ class K0014(Rule):
     # missingPodDisruptionBudget
     def scan(self):
         pdbs = self.db.PodDisruptionBudget.search(q.spec.selector.matchLabels.exists())
-        pdb_labels = []
-        for pdb in pdbs:
-            for k, v in pdb["spec"]["selector"]["matchLabels"].items():
-                pdb_labels.append((k, v))
-        check_label = lambda labels: bool(set([(k, v) for k, v in labels.items()]) & set(pdb_labels))
+        pdb_labels = [pdb["spec"]["selector"]["matchLabels"] for pdb in pdbs]
+        check_label = lambda labels: label_in_lst(labels, pdb_labels )
         self.output["Deployment"] = self.db.Deployment.search(~q.metadata.labels.test(check_label))
 
 
