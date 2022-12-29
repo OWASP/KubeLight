@@ -1,20 +1,26 @@
 import re
 
 from checker.container import Container
-from checker.utils import dget, arr_query_on_fly
+from checker.utils import dget, array_query
 
 
 class Workload:
     def __init__(self):
         super().__init__()
         self.name = ""
-        self.metadata = {}
-        self.spec = {}
         self.output = {}
         self.query = None
+        self.metadata = {}
+        self.spec = {}
 
-    def set_name(self, name):
+
+    def init_vars(self):
+        self.metadata = {}
+        self.spec = {}
+
+    def initialize(self, name):
         self.name = name
+        self.init_vars()
         return True
 
     def set_spec(self, spec):
@@ -53,6 +59,11 @@ class Workload:
     @property
     def volumes(self):
         return dget(self.spec, "volumes", default = [])
+
+    def logger(self, items, query):
+        data = array_query(items, query)
+        self.output[self.name] = data
+        return True
 
     def linux_hardening(self, containers):
         not_hardened_containers = []
@@ -99,7 +110,7 @@ class Workload:
             return False
 
     def container_output(self, containers, message):
-        data = arr_query_on_fly(containers, self.query)
+        data = array_query(containers, self.query)
         output = [{"container": Container(c).container, "log": [message.format(c=Container(c))]} for c
                                  in data]
         self.output[self.name] = output

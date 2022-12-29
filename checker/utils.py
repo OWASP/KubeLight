@@ -55,7 +55,7 @@ def label_in_lst(d1, lst):
     return False
 
 
-def arr_query_on_fly(items, query):
+def array_query(items, query):
     db = ArrayDB()
     db.populate(items)
     data = db.search(query)

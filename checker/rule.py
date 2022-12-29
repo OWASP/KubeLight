@@ -1,5 +1,6 @@
 from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT
 from checker.workload import Workload
+from checker.utils import array_query
 
 
 class Rule:
@@ -21,7 +22,7 @@ class Rule:
         for workload, Spec in SPEC_DICT.items():
             wc = Workload()
             template = SPEC_TEMPLATE_DICT[workload]
-            condition = (q.metadata.name.test(wc.set_name)) & (Spec.test(wc.set_spec)) & (
+            condition = (q.metadata.name.test(wc.initialize)) & (Spec.test(wc.set_spec)) & (
                         ~template.metadata.exists() | template.metadata.test(wc.set_metadata))
             if self.query:
                 wc.query = self.query
@@ -41,3 +42,4 @@ class Rule:
         self.output["RoleBinding"] = self.db.RoleBinding.search((q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
         self.output["RoleBinding"].extend(self.db.RoleBinding.search((q.roleRef.kind == "Role") & roles_ref))
         self.output["ClusterRoleBinding"] = self.db.ClusterRoleBinding.search((q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
+

@@ -1,7 +1,7 @@
 import re
 
 from checker.rule import Rule
-from checker.utils import  label_in_lst
+from checker.utils import label_in_lst
 from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
     DANGEROUS_PATH, DOCKER_PATH, CLOUD_UNSAFE_MOUNT_PATHS
 from checker.workload import Workload
@@ -54,7 +54,7 @@ class K009(Rule):
                                         bool(re.search(val_comb, v, flags=re.IGNORECASE))
                                         for k, v in data.items()])
         wc = Workload()
-        self.output["ConfigMap"] = self.db.ConfigMap.search(q.metadata.name.test(wc.set_name) &
+        self.output["ConfigMap"] = self.db.ConfigMap.search(q.metadata.name.test(wc.initialize) &
                                                             q.data.test(check_regex) & q.data.test(wc.insensitive_cm,
                                                                                                    key_comb, val_comb))
         self.configmap_output = wc.output
@@ -107,6 +107,7 @@ class K0052(Rule):
             self.output[workload] = getattr(self.db, workload).search \
                 (Spec.volumes.any(q.hostPath.path.test(check_path)))
 
+
 class K0053(Rule):
     # alert-mount-credentials-path
     @staticmethod
@@ -121,7 +122,6 @@ class K0053(Rule):
         for workload, Spec in SPEC_DICT.items():
             self.output[workload] = getattr(self.db, workload).search \
                 (Spec.volumes.any(q.hostPath.path.exists() & q.hostPath.path.test(check_path)))
-
 
 
 class K0054(Rule):
@@ -142,5 +142,13 @@ class K0055(Rule):
     def scan(self):
         check_path = lambda path: bool(path and any([path.startswith(item) for item in DOCKER_PATH]))
         for workload, Spec in SPEC_DICT.items():
+            wc = Workload()
+            query = q.hostPath.path.test(check_path)
             self.output[workload] = getattr(self.db, workload).search \
-                (Spec.volumes.any(q.hostPath.path.test(check_path)))
+                (q.metadata.name.test(wc.initialize) & Spec.volumes.any(query) & Spec.volumes.test(wc.logger, query))
+
+
+class K0056(Rule):
+    def scan(self):
+        npolicies = self.db.NetworkPolicy.search(q.kind == "NetworkPolicy")
+        self.output["NetworkPolicy"] = ["No network policy defined in this rule"] if len(npolicies) == 0 else []

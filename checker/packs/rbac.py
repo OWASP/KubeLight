@@ -1,7 +1,7 @@
 from checker.rule import Rule
 from checker.utils import cluster_role_binding_name_check, role_binding_name_check, \
     cluster_role_admin_name_check, rbac_rule_check
-from checker.settings import q
+from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT
 
 
 class K0019(Rule):
@@ -165,7 +165,7 @@ class K0048(Rule):
     # Can update coredns configmap
     def scan(self):
         self.query = q.rules.any(
-            (q.resources.test(rbac_rule_check,("configmap", "*"))) &
-            (q.verbs.test(rbac_rule_check,("update", "patch", "*"))) &
+            (q.resources.test(rbac_rule_check, ("configmap", "*"))) &
+            (q.verbs.test(rbac_rule_check, ("update", "patch", "*"))) &
             (q.apiGroups.any(["*", ""])))
         self.scan_rbac_binding_rules()
