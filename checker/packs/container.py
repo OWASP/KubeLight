@@ -1,4 +1,5 @@
 import re
+import semver
 
 from checker.rule import Rule
 from checker.settings import q, SPEC_DICT, INSECURE_CAP, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
@@ -123,3 +124,32 @@ class K0051(Rule):
     def scan(self):
         self.wl_func = "host_path_rw"
         self.scan_workload_any_container()
+
+
+class K0059(Rule):
+    def scan(self):
+        self.message = "Container {c.name}: Sudo in command"
+        self.query = q.command.exists() & q.command.test(lambda command: any(["sudo" in cmd for cmd in command]))
+        self.scan_workload_any_container()
+
+
+class K0061(Rule):
+    @staticmethod
+    def check_kubelet_version(version_str):
+        version = version_str.split("-")[0].strip("v")
+        condition = semver.compare(version, "1.19.14") < 0
+        condition |= semver.compare(version, "1.20.10") == 0
+        condition |= semver.compare(version, "1.22.0") >= 0 > semver.compare(version, "1.22.1")
+        condition |= semver.compare(version, "1.21.0") >= 0 > semver.compare(version, "1.21.4")
+        condition |= semver.compare(version, "1.20.0") >= 0 > semver.compare(version, "1.20.9")
+        return condition
+
+    def scan(self):
+        self.output["Node"] = self.db.Node.search(
+            q.status.nodeInfo.kubeletVersion.test(K0061.check_kubelet_version))
+        self.query = q.volumeMounts.any(q.subPath.exists())
+        if len(self.output["Node"]) > 0:
+            self.scan_workload_any_container()
+
+
+

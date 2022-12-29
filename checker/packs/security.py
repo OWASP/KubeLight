@@ -1,9 +1,9 @@
 import re
 
 from checker.rule import Rule
-from checker.utils import label_in_lst
+from checker.utils import label_in_lst, label_subset
 from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
-    DANGEROUS_PATH, DOCKER_PATH, CLOUD_UNSAFE_MOUNT_PATHS
+    DANGEROUS_PATH, DOCKER_PATH, CLOUD_UNSAFE_MOUNT_PATHS, SENSITIVE_WORKLOAD_NAMES, SENSITIVE_SERVICE_NAMES
 from checker.workload import Workload
 
 
@@ -130,7 +130,7 @@ class K0054(Rule):
         services = self.db.Service.search(
             q.spec.selector.exists() & q.spec.ports.any(q.port.test(check_ssh) | q.targetPort.test(check_ssh)))
         service_labels = [item["spec"]["selector"] for item in services]
-        check_label = lambda labels: label_in_lst(labels, service_labels)
+        check_label = lambda labels: label_subset(labels, service_labels)
         for workload, Spec in SPEC_DICT.items():
             template = SPEC_TEMPLATE_DICT[workload]
             self.output[workload] = getattr(self.db, workload).search(template.metadata.labels.exists() &
@@ -152,3 +152,32 @@ class K0056(Rule):
     def scan(self):
         npolicies = self.db.NetworkPolicy.search(q.kind == "NetworkPolicy")
         self.output["NetworkPolicy"] = ["No network policy defined in this rule"] if len(npolicies) == 0 else []
+
+
+class K0057(Rule):
+    def scan(self):
+        self.output["Pod"] = self.db.Pod.search(~q.metadata.ownerReferences.exists())
+
+
+class K0058(Rule):
+    # sensitive interfaces
+    def scan(self):
+        check_svc_name = lambda name: any([svc_name in name for svc_name in SENSITIVE_SERVICE_NAMES])
+        services = self.db.Service.search(q.metadata.name.test(check_svc_name) &
+                                          q.spec.selector.exists() & q.spec.type.one_of(["NodePort", "LoadBalancer"]))
+        check_wl_name = lambda name: any([wl_name in name for wl_name in SENSITIVE_WORKLOAD_NAMES])
+        for workload, Spec in SPEC_DICT.items():
+            template = SPEC_TEMPLATE_DICT[workload]
+            for service in services:
+                service_label = service["spec"]["selector"]
+                data = getattr(self.db, workload).search(q.metadata.name.test(check_wl_name) &
+                                                         template.metadata.labels.exists() &
+                                                         template.metadata.labels.fragment(
+                                                             service_label))
+                self.output[workload].extend(data)
+
+
+class K0060(Rule):
+    def scan(self):
+        for workload, Spec in SPEC_DICT.items():
+            self.output[workload] = getattr(self.db, workload).search(~(q.metadata.namespace.exists()) | (q.metadata.namespace == "default"))

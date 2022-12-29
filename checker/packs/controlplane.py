@@ -41,7 +41,6 @@ class K0050(Rule):
     # escapeCVE-2022-23648 containerd-fs-escape
     @staticmethod
     def check_containerd_version(version_str):
-        print(version_str)
         version = version_str.split("://")[1]
         version = version.split("-")[0].strip()
         condition = semver.compare(version, "1.4.12") < 0

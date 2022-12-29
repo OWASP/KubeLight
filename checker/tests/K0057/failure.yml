@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: envar-demo
+  labels:
+    purpose: demonstrate-envars
+spec:
+  containers:
+  - name: envar-demo-container
+    image: gcr.io/google-samples/node-hello:1.0
+    securityContext:
+      runAsNonRoot: false
+    env:
+    - name: pwd
+      valueFrom:
+         secretKeyRef:
+           key: bla
+           name: blue
+      securityContext:
+        runAsNonRoot: false
+    - name: DEMO_FAREWELL
+      value: "Such a sweet sorrow"

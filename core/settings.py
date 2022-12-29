@@ -10,3 +10,4 @@ NAMESPACE_SCOPED_RESOURCES = ['ConfigMap', 'CronJob', 'DaemonSet',
                               'ValidatingWebhookConfiguration']
 
 RESOURCES = CLUSTER_SCOPED_RESOURCES + NAMESPACE_SCOPED_RESOURCES
+

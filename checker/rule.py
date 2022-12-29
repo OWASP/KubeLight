@@ -1,7 +1,7 @@
 from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT
 from checker.workload import Workload
 from checker.utils import array_query
-
+from core.settings import RESOURCES
 
 class Rule:
     """
@@ -17,6 +17,8 @@ class Rule:
         self.query = None
         self.wl_func = "container_output"
         self.type = "NAMESPACE"
+        for resource in RESOURCES:
+            self.output[resource] = []
 
     def scan_workload_any_container(self, *args):
         for workload, Spec in SPEC_DICT.items():

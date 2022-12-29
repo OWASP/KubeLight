@@ -47,3 +47,8 @@ CLOUD_UNSAFE_MOUNT_PATHS = {
 
 DANGEROUS_PATH = ["/etc", "/var"]
 DOCKER_PATH = ["/var/run/docker.sock", "/var/run/docker"]
+
+SENSITIVE_SERVICE_NAMES = ["nifi-service", "argo-server", "minio", "postgres", "workflow-controller-metrics",
+                           "weave-scope-app", "kubernetes-dashboard", "jenkins"]
+SENSITIVE_WORKLOAD_NAMES = ["nifi", "argo-server", "weave-scope-app", "kubeflow", "kubernetes-dashboard", "jenkins",
+                            "prometheus-deployment"]

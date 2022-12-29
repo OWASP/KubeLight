@@ -1,0 +1,76 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec :
+          containers :
+            -
+              name : mysql
+              image : mysql
+              env :
+                -
+                  name : MYSQL_ROOT_PASSWORD
+                  value : "rootpasswd"
+              volumeMounts :
+                -
+                  mountPath : /var/lib/mysql
+                  name : site-data
+                  subPath : mysql
+            -
+              name : php
+              image : php:7.0-apache
+              volumeMounts :
+                -
+                  mountPath : /var/www/html
+                  name : site-data
+                  subPath : html
+          volumes :
+            -
+              name : site-data
+              persistentVolumeClaim :
+                claimName : my-lamp-site-data
+          restartPolicy: OnFailure
+
+---
+
+apiVersion: v1
+kind: Node
+metadata:
+  annotations:
+    management.cattle.io/pod-limits: '{"cpu":"4700m","memory":"7730Mi"}'
+    management.cattle.io/pod-requests: '{"cpu":"3025m","memory":"5106Mi","pods":"11"}'
+    node.alpha.kubernetes.io/ttl: "0"
+    volumes.kubernetes.io/controller-managed-attach-detach: "true"
+  creationTimestamp: "2022-12-21T12:07:32Z"
+  labels:
+    beta.kubernetes.io/arch: amd64
+    beta.kubernetes.io/instance-type: m5.xlarge
+    beta.kubernetes.io/os: linux
+  name: ap-south-1.compute.internal
+  resourceVersion: "522297142"
+  uid: ed7d8bf9-c884-4d52-b2f4ghgh-2616c88fe937
+spec:
+  providerID: aws:///ap-south-1a/abcd
+status:
+  nodeInfo:
+    architecture: amd64
+    bootID: b729570d-5dd0-4f79-8360-e5f758075691
+    containerRuntimeVersion: docker://20.10.7
+    kernelVersion: 5.4.149-73.259.amzn2.x86_64
+    kubeProxyVersion: v1.21.4-eks-033ce7e
+    kubeletVersion: v1.20.10-eks-033ce7e
+    machineID: ec2deae3a10d05fe5b7ft651ffgfgf98bf65
+    operatingSystem: linux
+    osImage: Amazon Linux 2
+    systemUUID: ec2deae3-a10d-05fe-5b7c-f6fgf981ff98bf65
+  volumesAttached:
+  - devicePath: /dev/xvdbj
+    name: kubernetes.io/aws-ebs/aws://ap-south-1a/vol-077b772714394678fb
+  volumesInUse:
+  - kubernetes.io/aws-ebs/aws://ap-south-1a/vol-075bc271ffgfg4394678fb

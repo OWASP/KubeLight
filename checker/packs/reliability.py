@@ -41,7 +41,7 @@ class K0014(Rule):
     def scan(self):
         pdbs = self.db.PodDisruptionBudget.search(q.spec.selector.matchLabels.exists())
         pdb_labels = [pdb["spec"]["selector"]["matchLabels"] for pdb in pdbs]
-        check_label = lambda labels: label_in_lst(labels, pdb_labels )
+        check_label = lambda labels: label_in_lst(labels, pdb_labels)
         self.output["Deployment"] = self.db.Deployment.search(~q.metadata.labels.test(check_label))
 
 

@@ -55,6 +55,13 @@ def label_in_lst(d1, lst):
     return False
 
 
+def label_subset(d1, lst):
+    for d2 in lst:
+        if set(d2.items()).issubset(set(d1.items())):
+            return True
+    return False
+
+
 def array_query(items, query):
     db = ArrayDB()
     db.populate(items)
