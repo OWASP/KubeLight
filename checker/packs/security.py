@@ -1,7 +1,7 @@
 import re
 
 from checker.rule import Rule
-from checker.utils import label_in_lst, label_subset
+from checker.utils import label_subset
 from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
     DANGEROUS_PATH, DOCKER_PATH, CLOUD_UNSAFE_MOUNT_PATHS, SENSITIVE_WORKLOAD_NAMES, SENSITIVE_SERVICE_NAMES
 from checker.workload import Workload
@@ -67,16 +67,21 @@ class K0030(Rule):
 
 class K0036(Rule):
     def scan(self):
-        pods = self.db.Pod.search(q.metadata.labels.exists())
-        pod_labels = [pod["metadata"]["labels"] for pod in pods]
-        check_label = lambda labels: label_in_lst(labels, pod_labels)
         check_pt = lambda pt: set(map(str.upper, pt)) == {"INGRESS", "EGRESS"}
-        Spec = q.spec
         condition = (
-                Spec.podSelector.matchLabels.exists() & Spec.ingress.exists() & Spec.egress.exists() &
-                Spec.policyTypes.exists() & Spec.policyTypes.test(check_pt) &
-                Spec.podSelector.matchLabels.test(check_label))
-        self.output["NetworkPolicy"] = self.db.NetworkPolicy.search(~condition)
+                q.spec.podSelector.matchLabels.exists() & q.spec.ingress.exists() & q.spec.egress.exists() &
+                q.spec.policyTypes.exists() & q.spec.policyTypes.test(check_pt))
+        npolicies = self.db.NetworkPolicy.search(condition)
+        for workload, Spec in SPEC_DICT.items():
+            template = SPEC_TEMPLATE_DICT[workload]
+            if npolicies:
+                for npolicy in npolicies:
+                    nlabels = npolicy["spec"]["podSelector"]["matchLabels"]
+                    wl_query = template.metadata.labels.exists() & template.metadata.labels.fragment(nlabels)
+                    data = getattr(self.db, workload).search(~wl_query)
+                    self.output[workload].extend(data)
+            else:
+                self.output[workload] = getattr(self.db, workload).all()
 
 
 class K0043(Rule):
@@ -151,7 +156,7 @@ class K0055(Rule):
 class K0056(Rule):
     def scan(self):
         npolicies = self.db.NetworkPolicy.search(q.kind == "NetworkPolicy")
-        self.output["NetworkPolicy"] = ["No network policy defined in this rule"] if len(npolicies) == 0 else []
+        self.output["NetworkPolicy"] = ["No network policy defined in this namespace"] if len(npolicies) == 0 else []
 
 
 class K0057(Rule):
@@ -180,4 +185,5 @@ class K0058(Rule):
 class K0060(Rule):
     def scan(self):
         for workload, Spec in SPEC_DICT.items():
-            self.output[workload] = getattr(self.db, workload).search(~(q.metadata.namespace.exists()) | (q.metadata.namespace == "default"))
+            self.output[workload] = getattr(self.db, workload).search(
+                ~(q.metadata.namespace.exists()) | (q.metadata.namespace == "default"))

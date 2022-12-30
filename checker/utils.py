@@ -1,5 +1,8 @@
+import re
+
 from functools import reduce
 from core.db import ArrayDB
+from checker.settings import DANGEROUS_CAP
 
 
 def dget(dictionary, keys, default={}):
@@ -60,6 +63,16 @@ def label_subset(d1, lst):
         if set(d2.items()).issubset(set(d1.items())):
             return True
     return False
+
+
+def check_cap(add, cap = DANGEROUS_CAP):
+    return bool(set(map(str.upper, add)) & set(list(cap)))
+
+
+def image_tag(image):
+    match = re.search(r":([\w][\w.-]{0,127}(\/)?)", image)
+    tag = match.group(1) if match else ""
+    return tag
 
 
 def array_query(items, query):

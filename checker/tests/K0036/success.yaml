@@ -4,7 +4,7 @@ kind: Pod
 metadata:
   name: test-pod2
   labels:
-    security: hii
+    security: medium
 spec:
   containers:
   - name: nginx

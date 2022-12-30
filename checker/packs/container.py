@@ -3,17 +3,15 @@ import semver
 
 from checker.rule import Rule
 from checker.settings import q, SPEC_DICT, INSECURE_CAP, SENSITIVE_KEY_REGEX, SENSITIVE_VALUE_REGEX, \
-    DANGEROUS_CAP, TRUSTED_REGISTRY, UNTRUSTED_REGISTRY
+    DANGEROUS_CAP, TRUSTED_REGISTRY, UNTRUSTED_REGISTRY, NGINX_CONTROLLER
+
+from checker.utils import image_tag, check_cap
 
 
 class K005(Rule):
     # dangerousCapabilities
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def scan(self):
         self.message = "Container %s has added dangerous capabilities " + ",".join(DANGEROUS_CAP)
-        check_cap = lambda add: bool(set(map(str.upper, add)) & set(DANGEROUS_CAP))
         self.query = (q.securityContext.capabilities.add != None) & \
                      (q.securityContext.capabilities.add.test(check_cap))
         self.scan_workload_any_container()
@@ -152,4 +150,43 @@ class K0061(Rule):
             self.scan_workload_any_container()
 
 
+class K0062(Rule):
+    # CVE-2021-25742
+    @staticmethod
+    def not_vulnerable(image):
+        tag = image_tag(image).strip("v")
+        condition = False
+        if tag:
+            condition = semver.compare(tag, "0.49.1") < 0
+            condition |= semver.compare(tag, "1.0.1") == 0
+        return condition
 
+    @staticmethod
+    def check_image(image):
+        return any([img in image for img in NGINX_CONTROLLER]) and K0062.not_vulnerable(image)
+
+    def scan(self):
+        self.query = q.image.test(K0062.check_image)
+        self.scan_workload_any_container()
+        check_data = lambda data: data.get("allow-snippet-annotations", True) in [False, "false"]
+        configmap = self.db.ConfigMap.search(q.data.exists() & ~q.data.test(check_data))
+        if self.output["Deployment"] or self.output["DaemonSet"]:
+            self.output["ConfigMap"] = configmap
+
+
+class K0063(Rule):
+    # CVE-2022-0185
+    @staticmethod
+    def check_kernel_version(version_str):
+        version = version_str.split("-")[0].strip("v")
+        condition = semver.compare(version, "5.1.0") >= 0 > semver.compare(version, "5.16.2")
+        return condition
+
+    def scan(self):
+        self.output["Node"] = self.db.Node.search(
+            q.status.nodeInfo.kernelVersion.test(K0063.check_kernel_version))
+        self.message = "Vulnerable kernel can be exploited via this Container {c.name}"
+        self.query = (q.securityContext.capabilities.add != None) & \
+                     (q.securityContext.capabilities.add.test(check_cap, ("ALL", "SYS_ADMIN")))
+        if len(self.output["Node"]) > 0:
+            self.scan_workload_any_container()

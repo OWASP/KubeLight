@@ -17,6 +17,9 @@ class Rule:
         self.query = None
         self.wl_func = "container_output"
         self.type = "NAMESPACE"
+        self.set_output()
+
+    def set_output(self):
         for resource in RESOURCES:
             self.output[resource] = []
 

@@ -52,3 +52,5 @@ SENSITIVE_SERVICE_NAMES = ["nifi-service", "argo-server", "minio", "postgres", "
                            "weave-scope-app", "kubernetes-dashboard", "jenkins"]
 SENSITIVE_WORKLOAD_NAMES = ["nifi", "argo-server", "weave-scope-app", "kubeflow", "kubernetes-dashboard", "jenkins",
                             "prometheus-deployment"]
+
+NGINX_CONTROLLER = ["nginx-controller", "ingress-controller", "ingress-nginx"]
