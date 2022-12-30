@@ -179,7 +179,7 @@ class K0063(Rule):
     @staticmethod
     def check_kernel_version(version_str):
         version = version_str.split("-")[0].strip("v")
-        condition = semver.compare(version, "5.1.0") >= 0 > semver.compare(version, "5.16.2")
+        condition = semver.compare(version, "5.1.0") > 0 > semver.compare(version, "5.16.2")
         return condition
 
     def scan(self):
@@ -188,5 +188,24 @@ class K0063(Rule):
         self.message = "Vulnerable kernel can be exploited via this Container {c.name}"
         self.query = (q.securityContext.capabilities.add != None) & \
                      (q.securityContext.capabilities.add.test(check_cap, ("ALL", "SYS_ADMIN")))
+        if len(self.output["Node"]) > 0:
+            self.scan_workload_any_container()
+
+
+class K0064(Rule):
+    # CVE-2022-0185
+    @staticmethod
+    def is_agrocd_vuln(image):
+        version = image_tag(image)
+        condition = False
+        if version:
+            condition = semver.compare(version, "2.1.9") > 0 > semver.compare(version, "2.2.4")
+            condition |= semver.compare(version, "2.2.4") > 0 > semver.compare(version, "2.3.0")
+        return "argocd" in image.lower() and condition
+
+    def scan(self):
+        self.output["Node"] = self.db.Node.search(q.status.nodeInfo.kernelVersion.test(K0063.check_kernel_version))
+        self.message = "Vulnerable kernel can be exploited via this Container {c.name}"
+        self.query = (q.image.test(K0064.is_agrocd_vuln))
         if len(self.output["Node"]) > 0:
             self.scan_workload_any_container()
