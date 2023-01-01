@@ -18,7 +18,7 @@ class K005(Rule):
 
 
 class K006(Rule):
-    # linuxHardening
+    # linuxHardening, CVE-2022-0492
     def scan(self):
         self.wl_func = "linux_hardening"
         self.scan_workload_any_container()
