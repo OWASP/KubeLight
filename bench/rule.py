@@ -1,31 +1,30 @@
+import os
+
 from bench.settings import CONFIGURATION
-from bench.utils import file_permission_more_restrictive, file_owner
+from bench.utils import has_equal_or_less_permissions, match_file_owner, param_val_for_binary
 
-"""
-Testcases
-1. File donot exists
-2. Folder instead of file
-3. Changed ownership and permission
-"""
-
-
-# handle if file exits or not
 
 class CISRule:
     def __init__(self):
         self.status = False
-        self.path = ""
+        self.paths = []
         self.recommendation = ""
+        self.log = []
 
-    def file_permission(self, component, threshold):
-        for path in CONFIGURATION[component]["confs"]:
-            if file_permission_more_restrictive(path, threshold):
-                return True, path
-        return False, ""
+    def component_file_permission(self, component, threshold):
+        return self.files_with_more_permission(CONFIGURATION[component]["confs"], threshold)
 
-    def file_ownership(self, component, user, group):
-        for path in CONFIGURATION[component]["confs"]:
-            u, g = file_owner(path)
-            if u == user and g == group:
-                return True, path
-        return False, ""
+    def component_file_ownership(self, component, user, group):
+        return self.files_not_match_ownership(CONFIGURATION[component]["confs"], user, group)
+
+    def component_param_value_from_bins(self, component, param):
+        return next((param_val_for_binary(bin, param) for bin in CONFIGURATION[component]["bins"] if
+                     param_val_for_binary(bin, param)), "")
+
+    def files_with_more_permission(self, paths, threshold):
+        return [path for path in paths if os.path.exists(path) and
+                      not has_equal_or_less_permissions(path, threshold)]
+
+    def files_not_match_ownership(self, paths, user, group):
+        return [path for path in paths if os.path.exists(path) and
+                not match_file_owner(path, user, group)]
