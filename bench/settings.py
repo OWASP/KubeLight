@@ -101,8 +101,84 @@ KUBELET = {
     "bins": [
         "hyperkube kubelet",
         "kubelet"
-    ]
+    ],
+    "cafile": [
+        "/etc/kubernetes/pki/ca.crt",
+        "/etc/kubernetes/certs/ca.crt",
+        "/etc/kubernetes/cert/ca.pem",
+        "/var/snap/microk8s/current/certs/ca.crt"
+      ],
+    "svc": [
+        "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf",
+        "/etc/systemd/system/kubelet.service",
+        "/lib/systemd/system/kubelet.service",
+        "/etc/systemd/system/snap.kubelet.daemon.service",
+        "/etc/systemd/system/snap.microk8s.daemon-kubelet.service",
+        "/etc/systemd/system/atomic-openshift-node.service",
+        "/etc/systemd/system/origin-node.service"
+      ],
+    "kubeconfig": [
+        "/etc/kubernetes/kubelet.conf",
+        "/etc/kubernetes/kubelet-kubeconfig.conf",
+        "/var/lib/kubelet/kubeconfig",
+        "/etc/kubernetes/kubelet-kubeconfig",
+        "/etc/kubernetes/kubelet/kubeconfig",
+        "/var/snap/microk8s/current/credentials/kubelet.config",
+        "/etc/kubernetes/kubeconfig-kubelet"
+      ],
+    "confs": [
+        "/etc/kubernetes/kubelet-config.yaml",
+        "/var/lib/kubelet/config.yaml",
+        "/var/lib/kubelet/config.yml",
+        "/etc/kubernetes/kubelet/kubelet-config.json",
+        "/etc/kubernetes/kubelet/config",
+        "/home/kubernetes/kubelet-config.yaml",
+        "/home/kubernetes/kubelet-config.yml",
+        "/etc/default/kubeletconfig.json",
+        "/etc/default/kubelet",
+        "/var/lib/kubelet/kubeconfig",
+        "/var/snap/kubelet/current/args",
+        "/var/snap/microk8s/current/args/kubelet",
+        "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf",
+        "/etc/systemd/system/kubelet.service",
+        "/lib/systemd/system/kubelet.service",
+        "/etc/systemd/system/snap.kubelet.daemon.service",
+        "/etc/systemd/system/snap.microk8s.daemon-kubelet.service",
+        "/etc/kubernetes/kubelet.yaml"
+      ]
 }
+
+
+KUBEPROXY = {
+      "bins": [
+        "kube-proxy",
+        "hyperkube proxy",
+        "hyperkube kube-proxy",
+        "proxy",
+        "openshift start network"
+      ],
+      "confs": [
+        "/etc/kubernetes/proxy",
+        "/etc/kubernetes/addons/kube-proxy-daemonset.yaml",
+        "/etc/kubernetes/addons/kube-proxy-daemonset.yml",
+        "/var/snap/kube-proxy/current/args",
+        "/var/snap/microk8s/current/args/kube-proxy"
+      ],
+      "kubeconfig": [
+        "/etc/kubernetes/kubelet-kubeconfig",
+        "/etc/kubernetes/kubelet-kubeconfig.conf",
+        "/etc/kubernetes/kubelet/config",
+        "/var/lib/kubelet/kubeconfig",
+        "/var/snap/microk8s/current/credentials/proxy.config"
+      ],
+      "svc": [
+        "/lib/systemd/system/kube-proxy.service",
+        "/etc/systemd/system/snap.microk8s.daemon-proxy.service"
+      ],
+
+}
+
+
 CONFIGURATION = {
     "flanneld": {
         "bins": [

@@ -6,6 +6,7 @@ import grp
 import yaml
 import json
 
+from core.utils import array_query, q
 
 class FileOps:
     def __init__(self, paths=(), dirs=()):
@@ -55,6 +56,16 @@ class FileOps:
                         file_paths.append(os.path.join(root, file))
         return list(set(file_paths))
 
+    def run_query(self, query):
+        results = []
+        for path in self.paths:
+            data = FileContent(path).load()
+            output = array_query(data, query)
+            if output:
+                results.append(output)
+        return results
+
+
 
 class ProcessOps:
     def __init__(self, bins):
@@ -100,14 +111,14 @@ class FileContent:
             return yaml.safe_load_all(open(self.path, "r").read())
         except Exception as e:
             print(f"It is not Yaml file {self.path}")
-        return None
+        return []
 
     def json_load(self):
         try:
             return json.load(open(self.path, "r"))
         except Exception as e:
             print(f"It is not Yaml file {self.path}")
-        return None
+        return []
 
 
 def have_flag(flag, values):
