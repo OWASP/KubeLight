@@ -1,7 +1,8 @@
 import re
 
 from checker.container import Container
-from checker.utils import dget, array_query
+from checker.utils import dget
+from core.utils import array_query
 
 
 class Workload:

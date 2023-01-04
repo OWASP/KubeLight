@@ -3,6 +3,7 @@ from checker.workload import Workload
 from checker.utils import array_query
 from core.settings import RESOURCES
 
+
 class Rule:
     """
     Parent class for Rules to execute the query.
@@ -28,7 +29,7 @@ class Rule:
             wc = Workload()
             template = SPEC_TEMPLATE_DICT[workload]
             condition = (q.metadata.name.test(wc.initialize)) & (Spec.test(wc.set_spec)) & (
-                        ~template.metadata.exists() | template.metadata.test(wc.set_metadata))
+                    ~template.metadata.exists() | template.metadata.test(wc.set_metadata))
             if self.query:
                 wc.query = self.query
                 args = (self.message,) if not args else args
@@ -46,5 +47,5 @@ class Rule:
         roles_ref = q.roleRef.name.one_of(list(set([item["metadata"]["name"] for item in roles])))
         self.output["RoleBinding"] = self.db.RoleBinding.search((q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
         self.output["RoleBinding"].extend(self.db.RoleBinding.search((q.roleRef.kind == "Role") & roles_ref))
-        self.output["ClusterRoleBinding"] = self.db.ClusterRoleBinding.search((q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
-
+        self.output["ClusterRoleBinding"] = self.db.ClusterRoleBinding.search(
+            (q.roleRef.kind == "ClusterRole") & cluster_roles_ref)

@@ -1,7 +1,6 @@
 import re
 
 from functools import reduce
-from core.db import ArrayDB
 from checker.settings import DANGEROUS_CAP
 
 
@@ -75,9 +74,3 @@ def image_tag(image):
     return tag
 
 
-def array_query(items, query):
-    db = ArrayDB()
-    db.populate(items)
-    data = db.search(query)
-    db.truncate()
-    return data
