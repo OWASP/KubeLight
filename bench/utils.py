@@ -7,7 +7,6 @@ import yaml
 import json
 
 
-
 class FileOps:
     def __init__(self, paths=(), dirs=()):
         # paths can be list of file or folder
@@ -114,3 +113,7 @@ class FileContent:
 def have_flag(flag, values):
     return any([flag in item for item in values])
 
+
+def have_env(key):
+    value = os.environ.get(key)
+    return [] if value is None else value if isinstance(value, list) else [value]

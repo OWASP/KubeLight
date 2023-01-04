@@ -1,6 +1,7 @@
 from bench.utils import ProcessOps
 from bench.settings import KUBELET, ETCD, CONTROLLER_MANAGER, API_SERVER, SCHEDULER
 
+
 class CISRule:
     def __init__(self):
         self.status = False
@@ -16,9 +17,3 @@ class CISRule:
         self.controller_manager_bin = ProcessOps(bins=CONTROLLER_MANAGER["bins"])
         self.scheduler_bin = ProcessOps(bins=SCHEDULER["bins"])
         self.etcd_bin = ProcessOps(bins=ETCD["bins"])
-
-
-
-
-
-

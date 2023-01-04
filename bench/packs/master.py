@@ -12,7 +12,7 @@ class CIS_1_1_1(CISRule):
 
 class CIS_1_1_2(CISRule):
     def scan(self):
-        self.owner = FileOps(paths=API_SERVER["confs"]).match_owner("root", "root")
+        self.ownership = FileOps(paths=API_SERVER["confs"]).match_owner("root", "root")
 
 
 class CIS_1_1_3(CISRule):
