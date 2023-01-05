@@ -187,3 +187,44 @@ class K0060(Rule):
         for workload, Spec in SPEC_DICT.items():
             self.output[workload] = getattr(self.db, workload).search(
                 ~(q.metadata.namespace.exists()) | (q.metadata.namespace == "default"))
+
+
+class K0067(Rule):
+    # default sa in namespace
+    def scan(self):
+        query = ~(q.metadata.name == "default")
+        self.output["ServiceAccount"] = self.db.ServiceAccount.search(query)
+
+
+class K0068(Rule):
+    # automount default sa
+    def scan(self):
+        self.output["ServiceAccount"] = self.db.ServiceAccount.search(~(q.automountServiceAccountToken.exists()) |
+                                                                      (q.automountServiceAccountToken == True) & (
+                                                                              q.metadata.name == "default"))
+
+
+class K0070(Rule):
+    # Namespace does not enable pod security admission
+    def scan(self):
+        ns_prefix = "pod-security.kubernetes.io/enforce"
+        check_label = lambda labels: any([item.startswith(ns_prefix) for item in labels])
+        self.scan_pod_security_admission(check_label)
+
+
+class K0071(Rule):
+    # Namespace does not enable pod security admission, baseline
+    def scan(self):
+        ns_prefix = "pod-security.kubernetes.io/enforce"
+        check_label = lambda labels: any([(key.startswith(ns_prefix)
+                                           and value == "restricted") for key, value in labels.items()])
+        self.scan_pod_security_admission(check_label)
+
+
+class K0072(Rule):
+    # Namespace does not enable pod security admission, restricted
+    def scan(self):
+        ns_prefix = "pod-security.kubernetes.io/enforce"
+        check_label = lambda labels: any([(key.startswith(ns_prefix)
+                                           and value in ["baseline", "restricted"]) for key, value in labels.items()])
+        self.scan_pod_security_admission(check_label)

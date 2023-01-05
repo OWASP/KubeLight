@@ -11,6 +11,7 @@ class CISRule:
         self.permission = None
         self.ownership = None
         self.flag = None
+        self.checker = None
         self.scan_type = "automated"
         self.kubelet_bin = ProcessOps(bins=KUBELET["bins"])
         self.apiserver_bin = ProcessOps(bins=API_SERVER["bins"])
@@ -18,3 +19,9 @@ class CISRule:
         self.scheduler_bin = ProcessOps(bins=SCHEDULER["bins"])
         self.etcd_bin = ProcessOps(bins=ETCD["bins"])
         self.proxy_bin = ProcessOps(bins=KUBEPROXY["bins"])
+
+
+class ManualCISRule(CISRule):
+    def __init__(self):
+        super().__init__()
+        self.scan_type = "manual"

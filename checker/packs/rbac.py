@@ -169,3 +169,34 @@ class K0048(Rule):
             (q.verbs.test(rbac_rule_check, ("update", "patch", "*"))) &
             (q.apiGroups.any(["*", ""])))
         self.scan_rbac_binding_rules()
+
+
+class K0065(Rule):
+    #  list cluster admin
+    def scan(self):
+        self.query = q.rules.any(
+            (q.resources.test(lambda res: bool({item.lower() for item in res} & {"*"}))) &
+            (q.verbs.test(lambda ver: bool({item.lower() for item in ver} & {"*"}))) &
+            (q.apiGroups.any(["*", ""])))
+        self.scan_rbac_binding_rules()
+
+
+class K0066(Rule):
+    #  roles can create pod
+    def scan(self):
+        self.query = q.rules.any(
+            (q.resources.test(lambda res: bool({item.lower() for item in res} & {"pods", "*"}))) &
+            (q.verbs.test(lambda ver: bool({item.lower() for item in ver} & {"create", "*"}))) &
+            (q.apiGroups.any(["*", ""])))
+        self.scan_rbac_binding_rules()
+
+
+class K0069(Rule):
+    #  roles can bind escalate
+    def scan(self):
+        self.query = q.rules.any(
+            (q.resources.test(lambda res: bool({item.lower() for item in res} & {"clusterroles", "roles", "*"}))) &
+            (q.verbs.test(lambda ver: bool({item.lower() for item in ver} & {"bind", "*"}))) &
+            (q.apiGroups.any(["rbac.authorization.k8s.io", "*"])))
+        self.scan_rbac_binding_rules()
+

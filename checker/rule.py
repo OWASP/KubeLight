@@ -1,6 +1,5 @@
 from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT
 from checker.workload import Workload
-from checker.utils import array_query
 from core.settings import RESOURCES
 
 
@@ -18,6 +17,7 @@ class Rule:
         self.query = None
         self.wl_func = "container_output"
         self.type = "NAMESPACE"
+        self.force_failed = None
         self.set_output()
 
     def set_output(self):
@@ -49,3 +49,18 @@ class Rule:
         self.output["RoleBinding"].extend(self.db.RoleBinding.search((q.roleRef.kind == "Role") & roles_ref))
         self.output["ClusterRoleBinding"] = self.db.ClusterRoleBinding.search(
             (q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
+
+
+    def scan_pod_security_admission(self, check_label):
+        query = q.webhooks.any(q.rules.any(q.scope != "Cluster"))
+        vwh = self.db.ValidatingWebhookConfiguration.search(query)
+        mwh = self.db.MutatingWebhookConfiguration.search(query)
+
+        ns = self.db.Namespace.search(q.labels.test(check_label))
+        if ns and vwh and mwh:
+            self.set_output()
+        else:
+            self.force_failed = True
+            self.output["Namespace"] = ns
+            self.output["ValidatingWebhookConfiguration"] = vwh
+            self.output["MutatingWebhookConfiguration"] = mwh
