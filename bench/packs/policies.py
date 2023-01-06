@@ -149,4 +149,4 @@ class CIS_5_7_3(ManualCISRule):
 
 class CIS_5_7_4(ManualCISRule):
     def scan(self):
-        self.output = Kube.resources_in_namespace(namespace="default","all")
+        self.output = Kube.resources_in_namespace("default", "all")
