@@ -15,7 +15,8 @@ class K001(Rule):
         for workload, Spec in SPEC_DICT.items():
             query = ~(Spec.automountServiceAccountToken.exists()) & Spec.serviceAccountName.one_of(serviceAccounts) \
                     | (Spec.automountServiceAccountToken == True)
-            self.output[workload] = getattr(self.db, workload).search(query)
+            not_exist = ~Spec.automountServiceAccountToken.exists() & ~Spec.serviceAccountName.exists()
+            self.output[workload] = getattr(self.db, workload).search(query|not_exist)
 
 
 class K002(Rule):

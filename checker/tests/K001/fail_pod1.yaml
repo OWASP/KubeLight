@@ -1,0 +1,31 @@
+# This succeeds because automounting is disabled at the pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: my-cron-job
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/my-cron-job-container: my-cron-job-container
+        spec:
+          automountServiceAccountToken: false
+          containers:
+          - name: my-cron-job-container
+            image: my-cron-job-image
+          restartPolicy: OnFailure

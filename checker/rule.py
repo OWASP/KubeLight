@@ -50,7 +50,6 @@ class Rule:
         self.output["ClusterRoleBinding"] = self.db.ClusterRoleBinding.search(
             (q.roleRef.kind == "ClusterRole") & cluster_roles_ref)
 
-
     def scan_pod_security_admission(self, check_label):
         query = q.webhooks.any(q.rules.any(q.scope != "Cluster"))
         vwh = self.db.ValidatingWebhookConfiguration.search(query)
@@ -64,3 +63,11 @@ class Rule:
             self.output["Namespace"] = ns
             self.output["ValidatingWebhookConfiguration"] = vwh
             self.output["MutatingWebhookConfiguration"] = mwh
+
+    def process_output(self):
+        passed = True
+        if type(self.output) == dict:
+            self.output = {k: v for k, v in self.output.items() if v}
+            if self.output:
+                passed = False
+        return {"passed": passed, "result":  self.output}

@@ -26,13 +26,15 @@ class CheckerTester:
     def run(self):
         for rulename in self.testcases_files:
             for filename in self.testcases_files[rulename]:
-                if False or "K0065" in filename:
+                if "K001/" in filename:
                     db = KubeDB(rulename)
                     data = yaml.safe_load_all(open(filename).read())
                     for res in data:
                         db.populate(res["kind"], [res])
                     rule = getattr(__main__, rulename)(db)
                     rule.scan()
+                    data = rule.process_output()
+                    print(data)
                     db.truncate()
                     if CheckerTester.input_status(filename) == "PASS" and CheckerTester.is_output_empty(rule.output):
                         print("Check Passed as expected", filename)
