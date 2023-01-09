@@ -8,7 +8,7 @@ from checker.settings import q, SPEC_DICT, INSECURE_CAP, SENSITIVE_KEY_REGEX, SE
 from checker.utils import image_tag, check_cap
 
 
-class K005(Rule):
+class K0005(Rule):
     # dangerousCapabilities
     def scan(self):
         self.message = "Container %s has added dangerous capabilities " + ",".join(DANGEROUS_CAP)
@@ -17,14 +17,14 @@ class K005(Rule):
         self.scan_workload_any_container()
 
 
-class K006(Rule):
+class K0006(Rule):
     # linuxHardening, CVE-2022-0492
     def scan(self):
         self.wl_func = "linux_hardening"
         self.scan_workload_any_container()
 
 
-class K007(Rule):
+class K0007(Rule):
     # insecureCapabilities
     def scan(self):
         self.message = "Container {c.name} has insecure capabilities"
@@ -34,7 +34,7 @@ class K007(Rule):
         self.scan_workload_any_container()
 
 
-class K008(Rule):
+class K0008(Rule):
     # sensitiveContainerEnvVar
     def scan(self):
         key_combined = "(" + ")|(".join(SENSITIVE_KEY_REGEX) + ")"

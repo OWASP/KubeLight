@@ -119,7 +119,7 @@ class CIS_5_3_2(ManualCISRule):
 
 class CIS_5_4_1(ManualCISRule):
     def scan(self):
-        self.checker = ["K008"]
+        self.checker = ["K0008"]
 
 
 class CIS_5_4_2(ManualCISRule):
@@ -139,12 +139,12 @@ class CIS_5_7_1(ManualCISRule):
 
 class CIS_5_7_2(ManualCISRule):
     def scan(self):
-        self.checker = ["K006"]
+        self.checker = ["K0006"]
 
 
 class CIS_5_7_3(ManualCISRule):
     def scan(self):
-        self.checker = ["K006"]
+        self.checker = ["K0006"]
 
 
 class CIS_5_7_4(ManualCISRule):

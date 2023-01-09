@@ -7,7 +7,7 @@ from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT, SENSITIVE_KEY_REG
 from checker.workload import Workload
 
 
-class K001(Rule):
+class K0001(Rule):
     def scan(self):
         sa = self.db.ServiceAccount.search(~(q.automountServiceAccountToken.exists()) |
                                            (q.automountServiceAccountToken == True))
@@ -19,31 +19,26 @@ class K001(Rule):
             self.output[workload] = getattr(self.db, workload).search(query|not_exist)
 
 
-class K002(Rule):
+
+class K0002(Rule):
     def scan(self):
         for workload, Spec in SPEC_DICT.items():
             self.output[workload] = getattr(self.db, workload).search(Spec.hostIPC == True)
 
 
-class K003(Rule):
+class K0003(Rule):
     def scan(self):
         for workload, Spec in SPEC_DICT.items():
             self.output[workload] = getattr(self.db, workload).search(Spec.hostPID == True)
 
 
-class K004(Rule):
+class K0004(Rule):
     def scan(self):
         for workload, Spec in SPEC_DICT.items():
             self.output[workload] = getattr(self.db, workload).search(Spec.hostNetwork == True)
 
 
-class K005(Rule):
-    def scan(self):
-        for workload, Spec in SPEC_DICT.items():
-            self.output[workload] = getattr(self.db, workload).search(Spec.hostPort == True)
-
-
-class K009(Rule):
+class K0009(Rule):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.configmap_output = []
