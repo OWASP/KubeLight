@@ -38,7 +38,7 @@ class Rule:
                 condition &= (Spec.containers.test(getattr(wc, self.wl_func)))
             self.output[workload] = getattr(self.db, workload).search(condition)
             self.container_output[workload] = wc.output
-        print(self.container_output)
+        #print(self.container_output)
 
     def scan_rbac_binding_rules(self, *args):
         roles = self.db.Role.search(self.query)
@@ -64,10 +64,14 @@ class Rule:
             self.output["ValidatingWebhookConfiguration"] = vwh
             self.output["MutatingWebhookConfiguration"] = mwh
 
-    def process_output(self):
-        passed = True
+    def process(self):
         if type(self.output) == dict:
-            self.output = {k: v for k, v in self.output.items() if v}
-            if self.output:
-                passed = False
-        return {"passed": passed, "result":  self.output}
+            self.output.pop("Pod")
+            self.output = {k: [item["metadata"]["name"] for item in v] for k, v in self.output.items() if v}
+
+
+
+
+
+
+

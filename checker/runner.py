@@ -1,7 +1,8 @@
+import yaml
 from core.db import KubeDB
 from core.settings import RESOURCES, CHECKER_POOL_SIZE
 from checker.packs import *
-
+from checker.settings import RULES_TO_RUN
 from multiprocessing.dummy import Pool
 
 
@@ -13,6 +14,7 @@ class Checker:
     def __init__(self, namespace=None):
         self.namespace = namespace
         self.db = KubeDB(namespace) if namespace else None
+        self.output = {}
 
     def populate_resources(self):
         for resource in RESOURCES:
@@ -25,9 +27,16 @@ class Checker:
     def scan(self):
         rules = Rule.__subclasses__()
         for cls in rules:
-            rule = cls(self.db)
-            rule.scan()
-            print(rule, rule.output)
+            rule_name = cls.__name__
+            if rule_name in RULES_TO_RUN:
+                rule = cls(self.db)
+                rule.scan()
+                rule.process()
+                if rule.output:
+                    self.output[rule_name]= rule.output
+    @property
+    def result(self):
+        return {self.namespace: self.output }
 
     @staticmethod
     def initiate_scan(namespace):
@@ -35,6 +44,7 @@ class Checker:
         checker.populate_resources()
         checker.scan()
         checker.clean()
+        print(checker.result)
 
     @staticmethod
     def run():

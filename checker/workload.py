@@ -93,9 +93,9 @@ class Workload:
             container = Container(container)
             name = container.name
             runAsNonroot = container.runAsNonRoot(self.runAsNonRoot)
-            print("Pod",self.runAsNonRoot,"Container",runAsNonroot)
+            #print("Pod",self.runAsNonRoot,"Container",runAsNonroot)
             runAsUser = container.runAsNonRoot(self.runAsNonRoot)
-            print("Pod", self.runAsUser, "Container", runAsUser)
+            #print("Pod", self.runAsUser, "Container", runAsUser)
             if runAsUser == "0":
                 container.log.append("Container %s can run as root, runAsUser set " % name)
                 not_root_containers.append({"container": container.container, "log": container.log})

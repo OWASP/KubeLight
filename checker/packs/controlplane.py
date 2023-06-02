@@ -16,6 +16,7 @@ class K0038(Rule):
 
 
 class K0049(Rule):
+    # Need try except
     # CVE-2022-3172
     # kube-apiserver --aggregator-reject-forwarding-redirect flag could be set to false
     @staticmethod

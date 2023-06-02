@@ -7,7 +7,8 @@ from tinydb.storages import MemoryStorage
 class KubeDB:
     def __init__(self, db_name):
         self.name = db_name
-        self.database = TinyDB(storage=MemoryStorage)
+        # self.database = TinyDB(storage=MemoryStorage)
+        self.database = TinyDB(f"data/{db_name}.json")
         self.initiate_kube_tables()
 
     def initiate_kube_tables(self):
