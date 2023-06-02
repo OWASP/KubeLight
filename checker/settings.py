@@ -1,3 +1,5 @@
+import os
+
 from tinydb import Query
 
 # Common Query spec
@@ -57,3 +59,7 @@ NGINX_CONTROLLER = ["nginx-controller", "ingress-controller", "ingress-nginx"]
 
 RULES_TO_RUN = ['K0001', 'K0002', 'K0003', 'K0004', 'K0005', 'K0006', 'K0007', 'K0008', 'K0009', 'K0010', 'K0035',
                 'K0032', 'K0033', 'K0034', 'K0019', 'K0020', 'K0040', 'K0042', 'K0050', 'K0052']
+
+HTTP_SERVER = ""
+HTTP_TOKEN = ""
+SCAN_ID = ""

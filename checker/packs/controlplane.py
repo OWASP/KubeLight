@@ -50,5 +50,5 @@ class K0050(Rule):
         return bool(version_str.startswith("containerd") and condition)
 
     def scan(self):
-        self.type = "CLUSTER"
+        self.type = "cluster"
         self.output["Node"] = self.db.Node.search(q.status.nodeInfo.containerRuntimeVersion.test(K0050.check_containerd_version))

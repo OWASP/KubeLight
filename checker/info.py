@@ -1,6 +1,437 @@
-import json
-
-
-def rules_info():
-    f = open("info.json","r")
-    return json.load(f)
+RULES_INFO = {
+    "K0001": {
+        "rule": "Automatic mapping of service account",
+        "rule_id": "K0001",
+        "severity": "Medium",
+        "scope": "namespace",
+        "about": "Prevent automatic mapping of service account tokens",
+        "description": "The automatic mapping of service account tokens can pose security risks if not properly managed. This rule verifies whether service accounts and their associated workloads have disabled the automatic mounting of service account tokens. By disabling this feature, the likelihood of unauthorized access to sensitive service account credentials is reduced. The rule applies to various Kubernetes resources, including CronJob, DaemonSet, Deployment, Job, Pod, ReplicaSet, ServiceAccount, and StatefulSet.",
+        "controls": [
+            "Check all service accounts on which automount is not disabled.",
+            "Check all workloads on which their associated service accounts have not disabled automount.",
+        ],
+        "remediation": "Disable automatic mounting of service account tokens either at the service account level or at the individual workload level. Set the 'automountServiceAccountToken' attribute to 'false' in the relevant resource's definition. It's important to note that the workload-level configuration takes precedence over the service account-level configuration.",
+        "examples": [
+            {
+                "resource_type": "ServiceAccount",
+                "example_yaml": "apiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: my-service-account\nautomountServiceAccountToken: false",
+            },
+            {
+                "resource_type": "Pod",
+                "example_yaml": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: my-pod\nspec:\n  automountServiceAccountToken: false",
+            },
+        ],
+        "tags": ["NSA", "Credential Access", "Discovery"],
+    },
+    "K0002": {
+        "rule": "Host IPC privileges",
+        "rule_id": "K0002",
+        "severity": "High",
+        "scope": "namespace",
+        "about": "Prevent the use of hostIPC privilege in Kubernetes Pods",
+        "description": "Containers should be isolated from the host machine as much as possible. The hostIPC field in deployment YAML may allow cross-container influence and may expose the host itself to potentially malicious or destructive actions. This rule identifies all Pods using hostIPC privilege.",
+        "controls": [
+            "Containers should be isolated from the host machine as much as possible.",
+            "The hostIPC field in deployment YAML may allow cross-container influence and may expose the host itself to potentially malicious or destructive actions.",
+        ],
+        "remediation": "Remove the 'hostIPC' attribute from the YAML file(s) unless it is absolutely necessary.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: ubuntu\n  labels:\n    app: ubuntu\nspec:\n  containers:\n  - image: ubuntu\n    name: ubuntu\n  hostIPC: false # Remove this attribute",
+            }
+        ],
+        "tags": ["NSA", "Privilege Escalation", "Defense Evasion"],
+    },
+    "K0003": {
+        "rule": "Host PID privileges",
+        "rule_id": "K0003",
+        "severity": "High",
+        "scope": "namespace",
+        "about": "Prevent the use of hostPID privilege in Kubernetes Pods",
+        "description": "Containers should be isolated from the host machine as much as possible. The hostPID field in deployment YAML may allow cross-container influence and may expose the host itself to potentially malicious or destructive actions. This rule identifies all Pods using hostPID privilege.",
+        "controls": [
+            "Containers should be isolated from the host machine as much as possible.",
+            "The hostPID field in deployment YAML may allow cross-container influence and may expose the host itself to potentially malicious or destructive actions.",
+        ],
+        "remediation": "Remove the 'hostPID' attribute from the YAML file(s) unless it is absolutely necessary.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: ubuntu\n  labels:\n    app: ubuntu\nspec:\n  containers:\n  - image: ubuntu\n    name: ubuntu\n  hostPID: false # Remove this attribute",
+            }
+        ],
+        "tags": ["NSA", "Privilege Escalation", "Defense Evasion"],
+    },
+    "K0004": {
+        "rule": "Host Network Usage",
+        "rule_id": "K0004",
+        "severity": "High",
+        "scope": "namespace",
+        "about": "Limit the usage of host network in Kubernetes Pods",
+        "description": "Containers should not use the host network unless necessary. This rule identifies Pods that are configured to use the host network, which can potentially expose sensitive services and information to the host network.",
+        "controls": [
+            "Only connect Pods to the host network when it is necessary.",
+            "If not required, set the 'hostNetwork' field of the Pod spec to 'false', or remove it completely (as 'false' is the default).",
+            "Whitelist only those Pods that must have access to the host network by design.",
+        ],
+        "remediation": "Update the YAML file(s) for Pods to set the 'hostNetwork' attribute to 'false' if it is not required.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: ubuntu\n  labels:\n    app: ubuntu\nspec:\n  containers:\n  - image: ubuntu\n    name: ubuntu\n  hostNetwork: false # Set this attribute to 'false'",
+            }
+        ],
+        "tags": ["Lateral Movement", "Defense Evasion"],
+    },
+    "K0005": {
+        "rule": "Dangerous Capabilities",
+        "rule_id": "K0005",
+        "severity": "High",
+        "scope": "namespace",
+        "about": "Restrict dangerous capabilities in Kubernetes containers",
+        "description": "Containers should not have dangerous and unnecessary capabilities assigned to them as it can increase the impact of a container compromise. This rule checks for the presence of dangerous capabilities that could grant high privileges to attackers. Dangerous capabilities, such as 'ALL', 'SYS_ADMIN', and 'NET_ADMIN', should be removed if they are not necessary for the container.",
+        "controls": [
+            "Check the capabilities assigned to containers against a configurable blacklist of dangerous capabilities.",
+            "Remove all dangerous capabilities that are not necessary for the container.",
+        ],
+        "remediation": "Update the YAML file(s) for Pods or containers to remove the dangerous capabilities that are not required.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: security-context-demo-4\nspec:\n  containers:\n  - name: sec-ctx-4\n    image: gcr.io/google-samples/node-hello:1.0\n    securityContext:\n      capabilities:\n        add: [] # Remove dangerous capabilities from this list",
+            },
+            {
+                "resource_type": "Deployment",
+                "example_yaml": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app\n  template:\n    metadata:\n      labels:\n        app: my-app\n    spec:\n      containers:\n      - name: my-app-container\n        image: my-app-image:latest\n        securityContext:\n          capabilities:\n            add: [] # Remove dangerous capabilities from this list",
+            },
+        ],
+        "tags": ["Privilege Escalation", "Defense Evasion"],
+    },
+    "K0006": {
+        "rule": "Linux Hardening",
+        "rule_id": "K0006",
+        "severity": "Medium",
+        "scope": "namespace",
+        "about": "Harden Kubernetes applications using security services",
+        "description": "To reduce the attack surface, it is recommended to harden your application using security services such as SELinux, AppArmor, and seccomp. Starting from Kubernetes version 22, SELinux is enabled by default. This rule checks if AppArmor, Seccomp, SELinux, or Linux Capabilities are defined in the securityContext of containers and pods. If none of these fields are defined for both the container and pod, an alert is generated.",
+        "controls": [
+            "Check if AppArmor, Seccomp, SELinux, or Linux Capabilities are defined in the securityContext of containers and pods.",
+            "If none of these fields are defined for both the container and pod, generate an alert.",
+        ],
+        "remediation": "Utilize security mechanisms such as AppArmor, Seccomp, SELinux, and Linux Capabilities to restrict containers' abilities to utilize unwanted privileges.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: my-app-pod\nspec:\n  securityContext:\n    seccompProfile:\n      type: RuntimeDefault\n    selinuxOptions:\n      level: s0:c123,c456\n  containers:\n  - name: my-app-container\n    image: my-app-image:latest\n    securityContext:\n      capabilities:\n        drop: ["ALL"]',
+            },
+            {
+                "resource_type": "Deployment",
+                "example_yaml": 'apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app-deployment\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app\n  template:\n    metadata:\n      labels:\n        app: my-app\n    spec:\n      securityContext:\n        seccompProfile:\n          type: RuntimeDefault\n        selinuxOptions:\n          level: s0:c123,c456\n      containers:\n      - name: my-app-container\n        image: my-app-image:latest\n        securityContext:\n          capabilities:\n            drop: ["ALL"]',
+            },
+        ],
+        "tags": [
+            "NSA",
+            "CVE-2022-0492",
+            "Privilege Escalation",
+            "Defense Evasion",
+            "Lateral Movement",
+        ],
+    },
+    "K0007": {
+        "rule": "Insecure Capabilities",
+        "rule_id": "K0007",
+        "severity": "High",
+        "scope": "namespace",
+        "about": "Restrict insecure capabilities in Kubernetes containers",
+        "description": "Containers should not have insecure and unnecessary capabilities assigned to them as it can increase the impact of a container compromise. This rule checks for the presence of insecure capabilities that could grant high privileges to attackers. Insecure capabilities, such as 'NET_ADMIN', 'CHOWN', 'DAC_OVERRIDE', 'FSETID', 'FOWNER', 'MKNOD', 'NET_RAW', 'SETGID', 'SETUID', 'SETFCAP', 'SETPCAP', 'NET_BIND_SERVICE', 'SYS_CHROOT', 'KILL', and 'AUDIT_WRITE', should be removed if they are not necessary for the container.",
+        "controls": [
+            "Check the capabilities assigned to containers against a blacklist of insecure capabilities.",
+            "Remove all insecure capabilities that are not necessary for the container.",
+        ],
+        "remediation": "Update the YAML file(s) for Pods or containers to remove the insecure capabilities that are not required.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: security-context-demo-4\nspec:\n  containers:\n  - name: sec-ctx-4\n    image: gcr.io/google-samples/node-hello:1.0\n    securityContext:\n      capabilities:\n        add: [] # Remove insecure capabilities from this list",
+            },
+            {
+                "resource_type": "Deployment",
+                "example_yaml": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app\n  template:\n    metadata:\n      labels:\n        app: my-app\n    spec:\n      containers:\n      - name: my-app-container\n        image: my-app-image:latest\n        securityContext:\n          capabilities:\n            add: [] # Remove insecure capabilities from this list",
+            },
+        ],
+        "tags": ["NSA", "Privilege Escalation", "Defense Evasion"],
+    },
+    "K0008": {
+        "rule": "Sensitive Container Environment Variables",
+        "rule_id": "K0008",
+        "severity": "Medium",
+        "scope": "namespace",
+        "about": "Check for sensitive environment variables in Kubernetes containers",
+        "description": "Containers should not contain sensitive environment variables that may expose sensitive information or credentials. This rule scans for the presence of sensitive environment variables in container specifications, excluding those sourced from external secrets or config maps.",
+        "controls": [
+            "Check all environment variables in container specifications for sensitive information or credentials.",
+            "Exclude environment variables sourced from external secrets or config maps.",
+        ],
+        "remediation": "Review and remove any sensitive environment variables from the container specifications. Consider using secrets or config maps to securely manage sensitive information.",
+        "examples": [
+            {
+                "resource_type": "Deployment",
+                "example_yaml": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app\n  template:\n    metadata:\n      labels:\n        app: my-app\n    spec:\n      containers:\n      - name: my-app-container\n        image: my-app-image:latest\n        env:\n        - name: DB_PASSWORD\n          value: mysecretpassword\n        - name: API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: my-app-secrets\n              key: api-key\n        - name: PUBLIC_KEY\n          valueFrom:\n            configMapKeyRef:\n              name: my-app-config\n              key: public-key",
+            },
+            {
+                "resource_type": "Pod",
+                "example_yaml": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: sensitive-pod\nspec:\n  containers:\n  - name: sensitive-container\n    image: my-app-image:latest\n    env:\n    - name: DB_PASSWORD\n      value: mysecretpassword\n    - name: API_KEY\n      valueFrom:\n        secretKeyRef:\n          name: my-app-secrets\n          key: api-key\n    - name: PUBLIC_KEY\n      valueFrom:\n        configMapKeyRef:\n          name: my-app-config\n          key: public-key",
+            },
+        ],
+        "tags": ["Credential Access", "Discovery"],
+    },
+    "K0009": {
+        "rule": "Sensitive ConfigMap Data",
+        "rule_id": "K0009",
+        "severity": "Medium",
+        "scope": "namespace",
+        "about": "Check for sensitive data in Kubernetes ConfigMaps",
+        "description": "ConfigMaps in Kubernetes may contain sensitive information or credentials that should be protected. This rule scans the data of ConfigMaps for the presence of sensitive data based on regular expressions. Any ConfigMaps found with sensitive data will be reported.",
+        "controls": [
+            "Scan the data of ConfigMaps for sensitive information or credentials.",
+            "Identify ConfigMaps that contain sensitive data based on regular expressions.",
+        ],
+        "remediation": "Review the data stored in ConfigMaps and remove any sensitive information or credentials. Consider using secrets or other secure mechanisms for managing sensitive data.",
+        "examples": [
+            {
+                "resource_type": "ConfigMap",
+                "example_yaml": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: sensitive-configmap\n  labels:\n    app: my-app\n    environment: prod\n  namespace: my-namespace\ndata:\n  DB_PASSWORD: mysecretpassword\n  API_KEY: myapikey123\n  PRIVATE_KEY: |\n    -----BEGIN PRIVATE KEY-----\n    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDMx7b4FDVlUh9r\n    6w7ptArj8geapVQ4Ie5NdxXUU2/4GBh5n5uEO/UQqDNWLjRnE3Qn4m5y6CgKQbVU\n    .\n    .\n    -----END PRIVATE KEY-----\n",
+            }
+        ],
+        "tags": ["NSA", "Discovery", "Credential Access"],
+    },
+    "K0010": {
+        "rule": "Image Tag not specified, should not be latest",
+        "rule_id": "K0010",
+        "severity": "Low",
+        "scope": "namespace",
+        "about": "Ensure that container images do not use 'latest' as the tag",
+        "description": "Containers should not use the 'latest' tag for container images as it makes it harder to track and control the versions of the images being used. This rule checks for containers where the image tag is set to 'latest'.",
+        "controls": [
+            "Check the image tag for containers to ensure that 'latest' is not used.",
+            "Specify explicit image tags instead of using 'latest'.",
+        ],
+        "remediation": "Update the YAML file(s) for Pods or containers to specify a specific tag instead of using 'latest' as the tag.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: my-pod\nspec:\n  containers:\n  - name: my-container\n    image: my-image:latest # Specify a specific tag instead of using 'latest'",
+            },
+            {
+                "resource_type": "Deployment",
+                "example_yaml": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-deployment\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app\n  template:\n    metadata:\n      labels:\n        app: my-app\n    spec:\n      containers:\n      - name: my-container\n        image: my-image:latest # Specify a specific tag instead of using 'latest'",
+            },
+        ],
+        "tags": ["Reliability"],
+    },
+    "K0035": {
+        "rule": "Non-root containers",
+        "rule_id": "K0035",
+        "severity": "Medium",
+        "scope": "namespace",
+        "about": "Ensure that containers are running as non-root users",
+        "description": "Containers should be configured to run as non-root users to minimize the potential impact of a container compromise. This rule checks if the runAsUser and runAsGroup fields are set to user IDs greater than 999 and if the allowPrivilegeEscalation field is set to false. It verifies the configurations in both the PodSecurityContext and SecurityContext for containers.",
+        "controls": [
+            "Check the runAsUser and runAsGroup configurations in the PodSecurityContext and SecurityContext for containers.",
+            "Ensure that the user IDs are greater than 999.",
+            "Verify that the allowPrivilegeEscalation field is set to false.",
+            "Make sure the runAsNonRoot field is true.",
+        ],
+        "remediation": "Update the YAML file(s) for Pods or containers to set the runAsUser and runAsGroup to user IDs greater than 999. Set the allowPrivilegeEscalation field to false and ensure the runAsNonRoot field is true.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: security-context-demo\nspec:\n  securityContext:\n    runAsUser: 1000\n    runAsGroup: 3000\n    fsGroup: 2000\n  containers:\n  - name: sec-ctx-demo\n    image: busybox\n    command: [ "sh", "-c", "sleep 1h" ]\n    securityContext:\n      allowPrivilegeEscalation: false',
+            }
+        ],
+        "tags": ["NSA", "Privilege Escalation", "Least Privilege", "Defense Evasion"],
+    },
+    "K0032": {
+        "rule": "Privileged Container",
+        "rule_id": "K0032",
+        "severity": "High",
+        "scope": "namespace",
+        "about": "Identify and remediate privileged containers in Kubernetes",
+        "description": "A privileged container has all the capabilities of the host machine, which can bypass the limitations of regular containers and potentially provide attackers with access to the host's resources. This rule checks if a container is configured as privileged and raises an alert if found.",
+        "controls": [
+            "Check the securityContext.privileged field in the pod spec to identify privileged containers.",
+            "Remediate by setting securityContext.privileged to false to remove privileged capabilities.",
+            "If deploying a privileged pod is necessary, apply additional restrictions such as network policies and Seccomp and remove unnecessary capabilities.",
+        ],
+        "remediation": "Update the YAML file(s) for the pod to set securityContext.privileged to false or apply appropriate restrictions if privileged deployment is necessary.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: privileged\nspec:\n  containers:\n    - name: pause\n      image: k8s.gcr.io/pause\n      securityContext:\n          privileged: true # This field triggers failure!",
+            }
+        ],
+        "tags": ["Privilege Escalation", "Defense Evasion"],
+    },
+    "K0033": {
+        "rule": "Allow Privilege Escalation",
+        "rule_id": "K0033",
+        "severity": "Medium",
+        "scope": "namespace",
+        "about": "Prevent privilege escalation in Kubernetes containers",
+        "description": "Allowing privilege escalation in containers can enable attackers to gain excessive capabilities and potentially compromise the system. This rule checks that the allowPrivilegeEscalation field in the securityContext of a container is set to false.",
+        "controls": [
+            "Verify that the allowPrivilegeEscalation field in the securityContext of containers is set to false.",
+            "Remediate by explicitly setting allowPrivilegeEscalation to false if it is not required by your application.",
+        ],
+        "remediation": "Update the YAML file(s) for Pods or containers to set allowPrivilegeEscalation to false in the securityContext.",
+        "examples": [
+            {
+                "resource_type": "Deployment",
+                "example_yaml": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: nginx-deployment\nspec:\n  replicas: 1\n  template:\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:latest\n        securityContext:\n          allowPrivilegeEscalation: false # this field should be set to false explicitly",
+            }
+        ],
+        "tags": ["Privilege Escalation"],
+    },
+    "K0034": {
+        "rule": "Read-Only Filesystem",
+        "rule_id": "K0034",
+        "severity": "Low",
+        "scope": "namespace",
+        "about": "Ensure that the container's filesystem is set to read-only",
+        "description": "By default, containers have mostly unrestricted execution within their own context. Setting the filesystem to read-only adds an extra layer of security by preventing unauthorized modification of the underlying application running on the container. This rule checks whether the `readOnlyRootFilesystem` field in the SecurityContext is set to `true`.",
+        "controls": [
+            "Check the value of the `readOnlyRootFilesystem` field in the SecurityContext of the container.",
+            "Ensure that the `readOnlyRootFilesystem` field is set to `true`.",
+        ],
+        "remediation": "Update the YAML file(s) for Pods or containers to set the `readOnlyRootFilesystem` field to `true` in the SecurityContext.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: security-context-demo\nspec:\n  containers:\n  - name: sec-ctx-demo\n    image: busybox\n    command: [ "sh", "-c", "sleep 1h" ]\n    securityContext:\n      readOnlyRootFilesystem: true',
+            }
+        ],
+        "tags": ["Container Security", "Defense in Depth"],
+    },
+    "K0019": {
+        "rule": "ClusterAdmin ClusterRole in RoleBinding",
+        "rule_id": "K0019",
+        "severity": "Medium",
+        "scope": "namespace",
+        "about": "Ensure that ClusterAdmin ClusterRole is not used in RoleBindings",
+        "description": "Using the ClusterAdmin ClusterRole in RoleBindings grants excessive privileges to users or service accounts, allowing them to perform any action within the cluster. This rule checks for the presence of RoleBindings that reference the ClusterAdmin ClusterRole.",
+        "controls": [
+            "Check the RoleBindings for references to the ClusterAdmin ClusterRole.",
+            "Ensure that the ClusterAdmin ClusterRole is not used in any RoleBindings.",
+        ],
+        "remediation": "Review and update the RoleBindings to use more restricted ClusterRoles that align with the principle of least privilege.",
+        "examples": [
+            {
+                "resource_type": "RoleBinding",
+                "example_yaml": "apiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata:\n  name: cluster-admin-rolebinding\nroleRef:\n  apiGroup: rbac.authorization.k8s.io\n  kind: ClusterRole\n  name: cluster-admin\nsubjects:\n- kind: User\n  name: alice",
+            }
+        ],
+        "tags": ["RBAC", "Least Privilege"],
+    },
+    "K0020": {
+        "rule": "ClusterAdmin ClusterRole in ClusterRoleBinding",
+        "rule_id": "K0020",
+        "severity": "Medium",
+        "scope": "cluster",
+        "about": "Ensure that ClusterAdmin ClusterRole is not used in ClusterRoleBindings",
+        "description": "Using the ClusterAdmin ClusterRole in ClusterRoleBindings grants excessive privileges to users or service accounts, allowing them to perform any action within the cluster. This rule checks for the presence of ClusterRoleBindings that reference the ClusterAdmin ClusterRole.",
+        "controls": [
+            "Check the ClusterRoleBindings for references to the ClusterAdmin ClusterRole.",
+            "Ensure that the ClusterAdmin ClusterRole is not used in any ClusterRoleBindings.",
+        ],
+        "remediation": "Review and update the ClusterRoleBindings to use more restricted ClusterRoles that align with the principle of least privilege.",
+        "examples": [
+            {
+                "resource_type": "ClusterRoleBinding",
+                "example_yaml": "apiVersion: rbac.authorization.k8s.io/v1\nkind: ClusterRoleBinding\nmetadata:\n  name: cluster-admin-clusterrolebinding\nroleRef:\n  apiGroup: rbac.authorization.k8s.io\n  kind: ClusterRole\n  name: cluster-admin\nsubjects:\n- kind: Group\n  name: system:authenticated",
+            }
+        ],
+        "tags": ["RBAC", "Least Privilege"],
+    },
+    "K0040": {
+        "rule": "Data Destruction",
+        "rule_id": "K0040",
+        "severity": "Medium",
+        "scope": "namespace",
+        "about": "Ensure that subjects with delete/deletecollection RBAC permissions on workloads are minimized",
+        "description": "Attackers may attempt to destroy data and resources in the cluster by deleting deployments, configurations, storage, and compute resources. This rule checks for subjects that have delete/deletecollection RBAC permissions on workloads.",
+        "controls": [
+            "Check the RBAC permissions of subjects to determine if they have delete/deletecollection permissions on workloads.",
+            "Ensure that the number of subjects with such permissions is minimized to reduce the risk of data destruction.",
+        ],
+        "remediation": "Review and update the RBAC permissions to follow the least privilege principle and limit the number of subjects with delete/deletecollection permissions on workloads.",
+        "examples": [
+            {
+                "resource_type": "Role",
+                "example_yaml": 'kind: Role\napiVersion: rbac.authorization.k8s.io/v1\nmetadata:\n  namespace: default\n  name: pod-exec\nrules:\n- apiGroups: ["*"]\n  resources: ["secrets","pods","services","deployments","replicasets","daemonsets","statefulsets","jobs","cronjobs"]\n  verbs: ["delete","deletecollection"]',
+            }
+        ],
+        "tags": ["Data Destruction", "RBAC", "Least Privilege"],
+    },
+    "K0042": {
+        "rule": "Avoid Impersonation in RBAC Permissions",
+        "rule_id": "K0042",
+        "severity": "Medium",
+        "scope": "namespace",
+        "about": "Ensure that RBAC permissions do not allow impersonation",
+        "description": "Impersonation is an explicit RBAC permission that allows using other roles instead of the assigned role for a user, group, or service account. While sometimes needed for testing, it is highly recommended not to use this capability in production environments. This rule identifies RBACs that grant the 'impersonate' verb to users, groups, UIDs, or service accounts.",
+        "controls": [
+            "Check RBAC permissions to identify any instances where the 'impersonate' verb is granted to users, groups, UIDs, or service accounts.",
+            "Remove the 'impersonate' verb from the roles where it was found, or ensure that these roles are not bound to users, groups, or service accounts used for ongoing cluster operations.",
+            "If needed, bind the 'impersonate' role to a subject only for specific needs and for a limited time period.",
+        ],
+        "remediation": "Review and update RBAC permissions to prevent the use of impersonation in production environments. Remove or restrict the 'impersonate' verb as necessary.",
+        "examples": [
+            {
+                "resource_type": "Role",
+                "example_yaml": 'kind: Role\napiVersion: rbac.authorization.k8s.io/v1\nmetadata:\n  namespace: default\n  name: role-impersonate\nrules:\n- apiGroups: ["*"]\n  resources: ["*"]\n  verbs: ["impersonate"]',
+            }
+        ],
+        "tags": ["RBAC"],
+    },
+    "K0050": {
+        "rule": "Check for Containerd CVE-2022-23648 Vulnerability",
+        "rule_id": "K0050",
+        "severity": "High",
+        "scope": "cluster",
+        "about": "Check if the container runtime (containerd) version is vulnerable to CVE-2022-23648",
+        "description": "Containerd is a container runtime daemon for Linux and Windows. A vulnerability, identified as CVE-2022-23648, was found in containerd versions prior to 1.6.1, 1.5.10, and 1.4.12. This vulnerability allows containers to access read-only copies of arbitrary files and directories on the host, bypassing policy-based enforcement. This rule checks the containerd version to determine if it is a vulnerable version.",
+        "controls": [
+            "Check the containerd version to determine if it is vulnerable to CVE-2022-23648.",
+            "If the containerd version is prior to 1.6.1, 1.5.10, or 1.4.12, take remedial actions.",
+        ],
+        "remediation": "Patch containerd to version 1.6.1, 1.5.10, 1.4.12, or above to resolve the vulnerability.",
+        "examples": [
+            {
+                "resource_type": "Node",
+                "example_yaml": "apiVersion: v1\nkind: Node\nmetadata:\n  spec:\n    podCIDR: 10.0.6.0/24\n    podCIDRs:\n    - 10.0.6.0/24\n  status:\n    nodeInfo:\n      architecture: amd64\n      containerRuntimeVersion: containerd://1.4.11\n      kernelVersion: 5.4.170+\n      operatingSystem: linux",
+            }
+        ],
+        "tags": ["Containerd", "CVE-2022-23648"],
+    },
+    "K0052": {
+        "rule": "Check for HostPath Mount in Pods",
+        "rule_id": "K0052",
+        "severity": "High",
+        "scope": "namespace",
+        "about": "Check if Pods are using hostPath mount, which can lead to unauthorized access to the underlying host",
+        "description": "Mounting host directory to a container can be used by attackers to gain access to the underlying host. This rule identifies all Pods using the hostPath mount.",
+        "controls": [
+            "Check for hostPath mounts in Pods.",
+            "If a Pod is found using hostPath mount, take remedial actions.",
+        ],
+        "remediation": "Remove hostPath mounts from Pods unless absolutely necessary. Use the exception mechanism to remove notifications.",
+        "examples": [
+            {
+                "resource_type": "Pod",
+                "example_yaml": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: test-pd\nspec:\n  containers:\n  - image: k8s.gcr.io/test-webserver\n    name: test-container\n    volumeMounts:\n    - mountPath: /test-pd\n      name: test-volume\n  volumes:\n  - name: test-volume\n    hostPath: # This field triggers failure!\n      path: /data\n      type: Directory",
+            }
+        ],
+        "tags": ["Persistence", "Defense Evasion", "Container Security"],
+    },
+}

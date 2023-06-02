@@ -1,6 +1,11 @@
+import yaml
+
 from checker.settings import q, SPEC_DICT, SPEC_TEMPLATE_DICT
 from checker.workload import Workload
+from checker.info import RULES_INFO
+
 from core.settings import RESOURCES
+
 
 
 class Rule:
@@ -8,15 +13,15 @@ class Rule:
     Parent class for Rules to execute the query.
     """
 
-    def __init__(self, db):
+    def __init__(self, db, name):
         self.db = db
+        self.name = name
         self.output = {}
         self.container_output = {}
         self.log_output = {}
         self.message = ""
         self.query = None
         self.wl_func = "container_output"
-        self.type = "NAMESPACE"
         self.force_failed = None
         self.set_output()
 
@@ -38,7 +43,7 @@ class Rule:
                 condition &= (Spec.containers.test(getattr(wc, self.wl_func)))
             self.output[workload] = getattr(self.db, workload).search(condition)
             self.container_output[workload] = wc.output
-        #print(self.container_output)
+        print(self.container_output)
 
     def scan_rbac_binding_rules(self, *args):
         roles = self.db.Role.search(self.query)
@@ -64,10 +69,24 @@ class Rule:
             self.output["ValidatingWebhookConfiguration"] = vwh
             self.output["MutatingWebhookConfiguration"] = mwh
 
+    def to_yaml(self, data):
+        return yaml.dump(dict(data))
+
+    def get_diagnosis(self, workload, name):
+        log_data = self.container_output.get(workload,{}).get(name,[])
+        return [{"container_yaml":self.to_yaml(item["container"]), "report":item["log"]} for item in log_data]
+
+
+
     def process(self):
         if type(self.output) == dict:
             self.output.pop("Pod")
-            self.output = {k: [item["metadata"]["name"] for item in v] for k, v in self.output.items() if v}
+            self.output = { k: { "stats":{"count": len(v), "total":len(getattr(self.db,k))}, "issues":[{"name":item["metadata"]["name"], "yaml_file":self.to_yaml(item),
+                                "diagnosis":self.get_diagnosis(k,item["metadata"]["name"])} for item in v] }
+                           for k, v in self.output.items() if v}
+
+
+
 
 
 

@@ -25,7 +25,7 @@ class K0020(Rule):
     # clusterRoleBindingClusterAdmin
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.type = "CLUSTER"
+        self.type = "cluster"
         self.verbs = {"get", "list", "watch", "create", "update", "patch", "delete"}
         self.cluster_admin_names = ["cluster-admin"]
 

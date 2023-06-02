@@ -4,5 +4,5 @@ db.json
 venv/
 .DS_Store
 data/
-output/
+output/*.json
 testdb.json
