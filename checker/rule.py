@@ -22,6 +22,7 @@ class Rule:
         self.message = ""
         self.query = None
         self.wl_func = "container_output"
+        self.type = "namespace"
         self.force_failed = None
         self.set_output()
 
@@ -75,8 +76,6 @@ class Rule:
     def get_diagnosis(self, workload, name):
         log_data = self.container_output.get(workload,{}).get(name,[])
         return [{"container_yaml":self.to_yaml(item["container"]), "report":item["log"]} for item in log_data]
-
-
 
     def process(self):
         if type(self.output) == dict:

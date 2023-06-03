@@ -6,3 +6,4 @@ venv/
 data/
 output/*.json
 testdb.json
+checker/runner.py

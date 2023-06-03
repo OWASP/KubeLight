@@ -4,9 +4,11 @@ import uuid
 import requests
 
 from core.db import KubeDB
-from core.settings import RESOURCES, CHECKER_POOL_SIZE
+from core.settings import RESOURCES, CHECKER_POOL_SIZE, CLUSTER_SCOPED_RESOURCES, NAMESPACE_SCOPED_RESOURCES
 from checker.packs import *
+from checker.info import RULES_INFO
 from checker.settings import RULES_TO_RUN, HTTP_SERVER, HTTP_TOKEN, SCAN_ID
+
 from multiprocessing.dummy import Pool
 
 
@@ -39,12 +41,17 @@ class Checker:
                 if rule.output:
                     self.output[rule_name]= rule.output
 
+    @property
+    def data_for_http(self):
+        data = {}
+        for rule,val in self.output.items():
+            if RULES_INFO[rule]["scope"] == "cluster":
+                data[rule] = {"output": val}
+            else:
+                data[rule]= {self.namespace:val}
+        return data
 
 
-
-        # Add timeout and retries
-        #res = requests.post(HTTP_SERVER, headers={"Authorization": HTTP_TOKEN}, data=data)
-        #print(res.status_code)
 
 
     @staticmethod
