@@ -43,7 +43,7 @@ class Rule:
                 condition &= (Spec.containers.test(getattr(wc, self.wl_func)))
             self.output[workload] = getattr(self.db, workload).search(condition)
             self.container_output[workload] = wc.output
-        print(self.container_output)
+        #print(self.container_output)
 
     def scan_rbac_binding_rules(self, *args):
         roles = self.db.Role.search(self.query)

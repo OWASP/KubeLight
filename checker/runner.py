@@ -39,9 +39,12 @@ class Checker:
                 if rule.output:
                     self.output[rule_name]= rule.output
 
-    def dump_result(self):
-        print(self.output)
 
+
+
+        # Add timeout and retries
+        #res = requests.post(HTTP_SERVER, headers={"Authorization": HTTP_TOKEN}, data=data)
+        #print(res.status_code)
 
 
     @staticmethod
@@ -59,4 +62,4 @@ class Checker:
         pool.map(Checker.initiate_scan, Kube.namespace_names())
         pool.close()
         pool.join()
-        # once done send complete flag
+        # once done send complete flag status
