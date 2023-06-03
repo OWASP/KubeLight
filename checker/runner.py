@@ -51,9 +51,6 @@ class Checker:
                 data[rule]= {self.namespace:val}
         return data
 
-
-
-
     @staticmethod
     def initiate_scan(namespace):
         checker = Checker(namespace)

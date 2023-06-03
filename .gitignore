@@ -6,4 +6,4 @@ venv/
 data/
 output/*.json
 testdb.json
-checker/runner.py
+checker/ksec_runner.py
