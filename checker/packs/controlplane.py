@@ -6,7 +6,7 @@ from core.k8s import Kube
 
 
 class K0038(Rule):
-    # Apiserver insecure port
+    # Apiserver insecure port, not required.
     def scan(self):
         check_name = lambda name: "kube-apiserver" in name
         check_cmd = lambda command: "--insecure-port=1" in command

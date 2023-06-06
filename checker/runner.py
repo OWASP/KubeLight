@@ -4,10 +4,10 @@ import uuid
 import requests
 
 from core.db import KubeDB
-from core.settings import RESOURCES, CHECKER_POOL_SIZE, CLUSTER_SCOPED_RESOURCES, NAMESPACE_SCOPED_RESOURCES
+from core.settings import RESOURCES, CHECKER_POOL_SIZE, RESOURCE_WITHOUT_OWNER
 from checker.packs import *
 from checker.info import RULES_INFO
-from checker.settings import RULES_TO_RUN, HTTP_SERVER, HTTP_TOKEN, SCAN_ID
+from checker.settings import q, RULES_TO_RUN, HTTP_SERVER, HTTP_TOKEN, SCAN_ID
 
 from multiprocessing.dummy import Pool
 
@@ -26,6 +26,11 @@ class Checker:
         for resource in RESOURCES:
             data = Kube.resources_in_namespace(self.namespace, resource)
             self.db.populate(resource, data)
+
+        for resource in RESOURCE_WITHOUT_OWNER:
+            query = q.metadata.ownerReferences.exists()
+            self.db.remove(resource, query)
+
 
     def clean(self):
         self.db.truncate()
@@ -50,6 +55,9 @@ class Checker:
             else:
                 data[rule]= {self.namespace:val}
         return data
+
+    def dump_result(self):
+        pass
 
     @staticmethod
     def initiate_scan(namespace):

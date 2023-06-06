@@ -29,6 +29,9 @@ class KubeDB:
         for items in data_chunked:
             self.database.table(table_name).insert_multiple(items)
 
+    def remove(self, table_name, query):
+        self.database.table(table_name).remove(query)
+
 
 class ArrayDB:
     def __init__(self):
